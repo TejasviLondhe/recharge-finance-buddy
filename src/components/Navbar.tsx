@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   return (
@@ -27,7 +28,10 @@ const Navbar = () => {
           </a>
         </div>
 
-        <div>
+        <div className="flex items-center gap-4">
+          <Link to="/onboarding">
+            <Button variant="outline">Try Demo</Button>
+          </Link>
           <Button className="bg-gradient-to-r from-brand-blue to-brand-purple hover:opacity-90 transition-opacity">
             Download App
           </Button>
