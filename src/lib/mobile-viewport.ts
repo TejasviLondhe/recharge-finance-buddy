@@ -4,8 +4,9 @@
  */
 export function setupMobileViewport() {
   // Prevent zooming on iOS
-  document.addEventListener('touchmove', function(event) {
-    if (event.scale !== 1) {
+  document.addEventListener('touchmove', function(event: TouchEvent) {
+    // TypeScript fix: Access scale property safely using any type casting
+    if ((event as any).scale && (event as any).scale !== 1) {
       event.preventDefault();
     }
   }, { passive: false });
@@ -25,7 +26,8 @@ export function setupMobileViewport() {
   document.body.style.overscrollBehavior = 'none';
 
   // Add iOS standalone app styling
-  if (window.navigator.standalone) {
+  // TypeScript fix: Access standalone property safely using any type casting
+  if ((window.navigator as any).standalone) {
     document.documentElement.classList.add('ios-standalone');
   }
 }
