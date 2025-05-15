@@ -130,6 +130,7 @@ function dispatch(action: Action) {
   })
 }
 
+// Create a proper hook
 export function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
@@ -168,7 +169,7 @@ export function useToast() {
       })
 
       return {
-        id: id,
+        id,
         dismiss,
         update,
       }
@@ -178,8 +179,53 @@ export function useToast() {
   }
 }
 
-export const toast = {
-  ...useToast(),
+// Export individual methods to fix circular dependency
+const toast = {
   dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
   dismissAll: () => dispatch({ type: actionTypes.DISMISS_TOAST }),
 }
+
+// Add helper methods for common toast types
+const createToastHelper = (props: Omit<ToasterToast, "id">) => {
+  const id = genId()
+  
+  dispatch({
+    type: actionTypes.ADD_TOAST,
+    toast: {
+      ...props,
+      id,
+      open: true,
+      onOpenChange: (open) => {
+        if (!open) dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
+      },
+    },
+  })
+  
+  return {
+    id,
+    dismiss: () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id }),
+    update: (props: ToasterToast) =>
+      dispatch({
+        type: actionTypes.UPDATE_TOAST,
+        toast: { ...props, id },
+      }),
+  }
+}
+
+// Add helper methods on the toast object
+toast.toast = (props: Omit<ToasterToast, "id">) => createToastHelper(props)
+
+toast.success = (title: string, description?: string) => createToastHelper({
+  variant: "default",
+  title,
+  description,
+  className: "bg-green-500 text-white border-green-600",
+})
+
+toast.error = (title: string, description?: string) => createToastHelper({
+  variant: "destructive",
+  title,
+  description,
+})
+
+export { toast }
