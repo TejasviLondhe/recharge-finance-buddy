@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from "sonner";
 
-type AuthMode = 'login' | 'signup' | 'otp' | 'phone';
+type AuthMode = 'login' | 'signup' | 'otp' | 'phone' | 'forgot-password';
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>('login');
@@ -38,19 +38,21 @@ const Auth = () => {
     
     try {
       if (mode === 'login') {
-        // Login with phone and OTP
-        const { error } = await supabase.auth.signInWithOtp({
-          phone: phoneNumber
+        // Login with email and password
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password
         });
         
         if (error) throw error;
         
-        toast.success("OTP sent successfully");
-        setMode('otp');
+        toast.success("Login successful!");
+        navigate('/dashboard');
       } else if (mode === 'signup') {
         // Validate passwords match
         if (password !== confirmPassword) {
           toast.error("Passwords do not match");
+          setLoading(false);
           return;
         }
         
@@ -68,33 +70,22 @@ const Auth = () => {
         
         if (error) throw error;
         
-        toast.success("Signup successful! Verify your email to continue.");
+        toast.success("Signup successful! Please check your email for verification link.");
         setMode('login');
-      } else if (mode === 'phone') {
-        // Send OTP for phone verification
-        const { error } = await supabase.auth.signInWithOtp({
-          phone: phoneNumber
+      } else if (mode === 'forgot-password') {
+        // Reset password
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/auth/reset-password',
         });
         
         if (error) throw error;
         
-        toast.success("OTP sent successfully");
-        setMode('otp');
-      } else if (mode === 'otp') {
-        // Verify OTP
-        const { error, data } = await supabase.auth.verifyOtp({
-          phone: phoneNumber,
-          token: otp,
-          type: 'sms'
-        });
-        
-        if (error) throw error;
-        
-        toast.success("Authentication successful!");
-        navigate('/dashboard');
+        toast.success("If an account exists with this email, we've sent reset instructions.");
+        setMode('login');
       }
     } catch (error: any) {
       toast.error(error.message || "Authentication failed");
+      console.error("Auth error:", error);
     } finally {
       setLoading(false);
     }
@@ -120,14 +111,36 @@ const Auth = () => {
       
       <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">
         <div>
-          <label className="text-sm text-gray-500 mb-1 block">Phone Number</label>
+          <label className="text-sm text-gray-500 mb-1 block">Email Address</label>
           <Input 
-            type="tel" 
-            placeholder="+1 234 567 8900"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
+            type="email" 
+            placeholder="your.email@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="py-6"
+            required
           />
+        </div>
+        
+        <div className="relative">
+          <label className="text-sm text-gray-500 mb-1 block">Password</label>
+          <div className="relative">
+            <Input 
+              type={showPassword ? "text" : "password"} 
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pr-10 py-6"
+              required
+            />
+            <button 
+              type="button" 
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
         
         <Button 
@@ -135,8 +148,18 @@ const Auth = () => {
           className="w-full py-6 text-lg bg-emerald-500 hover:bg-emerald-600 rounded-xl"
           disabled={loading}
         >
-          {loading ? "Sending OTP..." : "Log In"}
+          {loading ? "Logging in..." : "Log In"}
         </Button>
+        
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => setMode('forgot-password')}
+            className="text-sm text-emerald-500"
+          >
+            Forgot your password?
+          </button>
+        </div>
         
         <div className="relative flex items-center justify-center">
           <hr className="w-full border-t border-gray-300" />
@@ -196,7 +219,7 @@ const Auth = () => {
         </div>
         
         <div>
-          <label className="text-sm text-gray-500 mb-1 block">Phone Number</label>
+          <label className="text-sm text-gray-500 mb-1 block">Phone Number (Optional)</label>
           <Input 
             type="tel" 
             placeholder="+1 234 567 8900"
@@ -253,7 +276,7 @@ const Auth = () => {
           className="w-full py-6 text-lg bg-emerald-500 hover:bg-emerald-600 rounded-xl"
           disabled={loading}
         >
-          {loading ? "Creating Account..." : "Continue"}
+          {loading ? "Creating Account..." : "Sign Up"}
         </Button>
         
         <div className="relative flex items-center justify-center">
@@ -284,27 +307,27 @@ const Auth = () => {
     </>
   );
   
-  const renderPhone = () => (
+  const renderForgotPassword = () => (
     <>
       <div className="w-full max-w-sm">
         <button 
-          onClick={() => setMode('signup')}
+          onClick={() => setMode('login')}
           className="flex items-center mb-4 bg-emerald-500 text-white p-2 rounded-full w-fit"
         >
           <ArrowLeft size={18} />
         </button>
         
-        <h1 className="text-2xl font-bold mb-2">Phone Number</h1>
-        <p className="text-gray-500 mb-8">Please add your mobile phone number</p>
+        <h1 className="text-2xl font-bold mb-2">Forgot Password</h1>
+        <p className="text-gray-500 mb-8">Enter your email to receive reset instructions</p>
         
         <form onSubmit={handleSubmit} className="space-y-8">
           <div>
-            <label className="text-sm text-gray-500 mb-1 block">* Phone Number</label>
+            <label className="text-sm text-gray-500 mb-1 block">Email Address</label>
             <Input 
-              type="tel" 
-              placeholder="+1 234 567 8900"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
+              type="email" 
+              placeholder="your.email@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="py-6"
               required
             />
@@ -315,77 +338,7 @@ const Auth = () => {
             className="w-full py-6 text-lg bg-emerald-500 hover:bg-emerald-600 rounded-xl"
             disabled={loading}
           >
-            {loading ? "Sending OTP..." : "Continue"}
-          </Button>
-        </form>
-      </div>
-    </>
-  );
-  
-  const renderOtp = () => (
-    <>
-      <div className="w-full max-w-sm">
-        <button 
-          onClick={() => setMode(mode === 'phone' ? 'signup' : 'login')}
-          className="flex items-center mb-4 bg-emerald-500 text-white p-2 rounded-full w-fit"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        
-        <h1 className="text-2xl font-bold mb-2">Login</h1>
-        <p className="text-gray-500 mb-8">Please enter your OTP</p>
-        
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div>
-            <label className="text-sm text-gray-500 mb-1 block">Enter Pin Code (5-digit)</label>
-            <div className="flex justify-center my-4">
-              <InputOTP maxLength={5} value={otp} onChange={setOtp}>
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
-            
-            {/* Number pad UI representation */}
-            <div className="grid grid-cols-3 gap-4 mt-8 mb-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => setOtp(otp.length < 5 ? otp + num.toString() : otp)}
-                  className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-medium border-2 
-                    ${otp.includes(num.toString()) ? 'bg-emerald-500 text-white' : 'border-gray-300 text-gray-700'}`}
-                >
-                  {num}
-                </button>
-              ))}
-              <div className="w-14 h-14 flex items-center justify-center">
-                <span role="img" aria-label="Smile" className="text-2xl">☺️</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOtp(otp.length < 5 ? otp + '0' : otp)}
-                className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-medium border-2 
-                  ${otp.includes('0') ? 'bg-emerald-500 text-white' : 'border-gray-300 text-gray-700'}`}
-              >
-                0
-              </button>
-              <div className="w-14 h-14 flex items-center justify-center">
-                <span role="img" aria-label="Fingerprint" className="text-2xl">👆</span>
-              </div>
-            </div>
-          </div>
-          
-          <Button 
-            type="submit"
-            className="w-full py-6 text-lg bg-emerald-500 hover:bg-emerald-600 rounded-xl"
-            disabled={otp.length !== 5 || loading}
-          >
-            {loading ? "Verifying..." : "Verify"}
+            {loading ? "Sending instructions..." : "Send Reset Instructions"}
           </Button>
         </form>
       </div>
@@ -396,8 +349,7 @@ const Auth = () => {
     <div className="min-h-screen bg-white px-4 py-8 flex flex-col items-center justify-center">
       {mode === 'login' && renderLogin()}
       {mode === 'signup' && renderSignup()}
-      {mode === 'phone' && renderPhone()}
-      {mode === 'otp' && renderOtp()}
+      {mode === 'forgot-password' && renderForgotPassword()}
     </div>
   );
 };
