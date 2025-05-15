@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { CreditCard, Wallet, Phone, Bell, Home, User, Settings, ArrowRight } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CreditCard, Wallet, Phone, Bell, Home, User, Settings, ArrowRight, LogOut } from 'lucide-react';
+import { useAuth } from "@/contexts/AuthContext";
+import { ProfileEditSheet } from "@/components/ProfileEditSheet";
+
 const Dashboard = () => {
+  const { user, signOut } = useAuth();
+  const [profileSheetOpen, setProfileSheetOpen] = useState(false);
+
   return <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white p-4 shadow-sm">
@@ -21,9 +28,48 @@ const Dashboard = () => {
             <button className="p-2">
               <Bell size={20} />
             </button>
-            <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-              <User size={18} className="text-emerald-500" />
-            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <User size={18} className="text-emerald-500" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56" align="end">
+                <div className="space-y-4">
+                  <div className="font-medium">
+                    {user?.email || 'Your Account'}
+                  </div>
+                  <div className="border-t border-gray-100 pt-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start" 
+                      onClick={() => setProfileSheetOpen(true)}
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Edit Profile</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start"
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start text-red-500 hover:text-red-500 hover:bg-red-50"
+                      onClick={signOut}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </header>
@@ -32,7 +78,7 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-6">
         {/* Welcome Section */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold">Welcome back, User!</h2>
+          <h2 className="text-2xl font-bold">Welcome back, {user?.user_metadata?.full_name || 'User'}!</h2>
           <p className="text-gray-500">Your telecom recharge dashboard</p>
         </section>
         
@@ -178,6 +224,12 @@ const Dashboard = () => {
           </button>
         </div>
       </nav>
+      
+      {/* Profile Edit Sheet */}
+      <ProfileEditSheet 
+        isOpen={profileSheetOpen} 
+        onClose={() => setProfileSheetOpen(false)} 
+      />
     </div>;
 };
 export default Dashboard;
