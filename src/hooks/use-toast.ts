@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import {
   Toast,
@@ -179,53 +180,111 @@ export function useToast() {
   }
 }
 
-// Export individual methods to fix circular dependency
-const toast = {
+// Define the type for our toast object
+interface ToastApi {
+  toast: (props: Omit<ToasterToast, "id">) => { 
+    id: string; 
+    dismiss: () => void; 
+    update: (props: ToasterToast) => void;
+  };
+  success: (title: string, description?: string) => { 
+    id: string; 
+    dismiss: () => void; 
+    update: (props: ToasterToast) => void;
+  };
+  error: (title: string, description?: string) => { 
+    id: string; 
+    dismiss: () => void; 
+    update: (props: ToasterToast) => void;
+  };
+  dismiss: (toastId?: string) => void;
+  dismissAll: () => void;
+}
+
+// Create our toast object with helper methods
+const toast: ToastApi = {
   dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
   dismissAll: () => dispatch({ type: actionTypes.DISMISS_TOAST }),
-}
-
-// Add helper methods for common toast types
-const createToastHelper = (props: Omit<ToasterToast, "id">) => {
-  const id = genId()
-  
-  dispatch({
-    type: actionTypes.ADD_TOAST,
-    toast: {
-      ...props,
-      id,
-      open: true,
-      onOpenChange: (open) => {
-        if (!open) dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
+  toast: (props: Omit<ToasterToast, "id">) => {
+    const id = genId()
+    
+    dispatch({
+      type: actionTypes.ADD_TOAST,
+      toast: {
+        ...props,
+        id,
+        open: true,
+        onOpenChange: (open) => {
+          if (!open) dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
+        },
       },
-    },
-  })
-  
-  return {
-    id,
-    dismiss: () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id }),
-    update: (props: ToasterToast) =>
-      dispatch({
-        type: actionTypes.UPDATE_TOAST,
-        toast: { ...props, id },
-      }),
-  }
+    })
+    
+    return {
+      id,
+      dismiss: () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id }),
+      update: (props: ToasterToast) =>
+        dispatch({
+          type: actionTypes.UPDATE_TOAST,
+          toast: { ...props, id },
+        }),
+    }
+  },
+  success: (title: string, description?: string) => {
+    const id = genId()
+    
+    dispatch({
+      type: actionTypes.ADD_TOAST,
+      toast: {
+        variant: "default",
+        title,
+        description,
+        className: "bg-green-500 text-white border-green-600",
+        id,
+        open: true,
+        onOpenChange: (open) => {
+          if (!open) dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
+        },
+      },
+    })
+    
+    return {
+      id,
+      dismiss: () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id }),
+      update: (props: ToasterToast) =>
+        dispatch({
+          type: actionTypes.UPDATE_TOAST,
+          toast: { ...props, id },
+        }),
+    }
+  },
+  error: (title: string, description?: string) => {
+    const id = genId()
+    
+    dispatch({
+      type: actionTypes.ADD_TOAST,
+      toast: {
+        variant: "destructive",
+        title,
+        description,
+        id,
+        open: true,
+        onOpenChange: (open) => {
+          if (!open) dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
+        },
+      },
+    })
+    
+    return {
+      id,
+      dismiss: () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id }),
+      update: (props: ToasterToast) =>
+        dispatch({
+          type: actionTypes.UPDATE_TOAST,
+          toast: { ...props, id },
+        }),
+    }
+  },
 }
-
-// Add helper methods on the toast object
-toast.toast = (props: Omit<ToasterToast, "id">) => createToastHelper(props)
-
-toast.success = (title: string, description?: string) => createToastHelper({
-  variant: "default",
-  title,
-  description,
-  className: "bg-green-500 text-white border-green-600",
-})
-
-toast.error = (title: string, description?: string) => createToastHelper({
-  variant: "destructive",
-  title,
-  description,
-})
 
 export { toast }
