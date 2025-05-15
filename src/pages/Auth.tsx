@@ -1,10 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from "sonner";
 
 type AuthMode = 'login' | 'signup' | 'otp' | 'phone';
 
@@ -16,24 +19,84 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [fullName, setFullName] = useState("");
   const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { session } = useAuth();
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (mode === 'login') {
-      // In a real app, you would validate and authenticate here
-      setMode('otp');
-    } else if (mode === 'signup') {
-      // In a real app, you would create an account here
-      setMode('phone');
-    } else if (mode === 'phone') {
-      // In a real app, you would send OTP here
-      setMode('otp');
-    } else if (mode === 'otp') {
-      // In a real app, you would verify OTP here
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (session) {
       navigate('/dashboard');
+    }
+  }, [session, navigate]);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      if (mode === 'login') {
+        // Login with phone and OTP
+        const { error } = await supabase.auth.signInWithOtp({
+          phone: phoneNumber
+        });
+        
+        if (error) throw error;
+        
+        toast.success("OTP sent successfully");
+        setMode('otp');
+      } else if (mode === 'signup') {
+        // Validate passwords match
+        if (password !== confirmPassword) {
+          toast.error("Passwords do not match");
+          return;
+        }
+        
+        // Sign up with email and password
+        const { error } = await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              phone_number: phoneNumber
+            }
+          }
+        });
+        
+        if (error) throw error;
+        
+        toast.success("Signup successful! Verify your email to continue.");
+        setMode('login');
+      } else if (mode === 'phone') {
+        // Send OTP for phone verification
+        const { error } = await supabase.auth.signInWithOtp({
+          phone: phoneNumber
+        });
+        
+        if (error) throw error;
+        
+        toast.success("OTP sent successfully");
+        setMode('otp');
+      } else if (mode === 'otp') {
+        // Verify OTP
+        const { error, data } = await supabase.auth.verifyOtp({
+          phone: phoneNumber,
+          token: otp,
+          type: 'sms'
+        });
+        
+        if (error) throw error;
+        
+        toast.success("Authentication successful!");
+        navigate('/dashboard');
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Authentication failed");
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -70,8 +133,9 @@ const Auth = () => {
         <Button 
           type="submit"
           className="w-full py-6 text-lg bg-emerald-500 hover:bg-emerald-600 rounded-xl"
+          disabled={loading}
         >
-          Log In
+          {loading ? "Sending OTP..." : "Log In"}
         </Button>
         
         <div className="relative flex items-center justify-center">
@@ -109,6 +173,17 @@ const Auth = () => {
       
       <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">
         <div>
+          <label className="text-sm text-gray-500 mb-1 block">Full Name</label>
+          <Input 
+            type="text" 
+            placeholder="John Doe"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="py-6"
+          />
+        </div>
+
+        <div>
           <label className="text-sm text-gray-500 mb-1 block">Email Address</label>
           <Input 
             type="email" 
@@ -116,9 +191,21 @@ const Auth = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="py-6"
+            required
           />
         </div>
         
+        <div>
+          <label className="text-sm text-gray-500 mb-1 block">Phone Number</label>
+          <Input 
+            type="tel" 
+            placeholder="+1 234 567 8900"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            className="py-6"
+          />
+        </div>
+
         <div className="relative">
           <label className="text-sm text-gray-500 mb-1 block">Password</label>
           <div className="relative">
@@ -128,6 +215,7 @@ const Auth = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="pr-10 py-6"
+              required
             />
             <button 
               type="button" 
@@ -148,6 +236,7 @@ const Auth = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="pr-10 py-6"
+              required
             />
             <button 
               type="button" 
@@ -162,8 +251,9 @@ const Auth = () => {
         <Button 
           type="submit"
           className="w-full py-6 text-lg bg-emerald-500 hover:bg-emerald-600 rounded-xl"
+          disabled={loading}
         >
-          Continue
+          {loading ? "Creating Account..." : "Continue"}
         </Button>
         
         <div className="relative flex items-center justify-center">
@@ -223,8 +313,9 @@ const Auth = () => {
           <Button 
             type="submit"
             className="w-full py-6 text-lg bg-emerald-500 hover:bg-emerald-600 rounded-xl"
+            disabled={loading}
           >
-            Continue
+            {loading ? "Sending OTP..." : "Continue"}
           </Button>
         </form>
       </div>
@@ -292,9 +383,9 @@ const Auth = () => {
           <Button 
             type="submit"
             className="w-full py-6 text-lg bg-emerald-500 hover:bg-emerald-600 rounded-xl"
-            disabled={otp.length !== 5}
+            disabled={otp.length !== 5 || loading}
           >
-            Verify
+            {loading ? "Verifying..." : "Verify"}
           </Button>
         </form>
       </div>
