@@ -1,20 +1,8 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { 
-  CreditCard, 
-  Wallet, 
-  Phone, 
-  Bell, 
-  Home, 
-  User, 
-  Settings,
-  ArrowRight
-} from 'lucide-react';
-
+import { CreditCard, Wallet, Phone, Bell, Home, User, Settings, ArrowRight } from 'lucide-react';
 const Dashboard = () => {
-  return (
-    <div className="min-h-screen bg-gray-50">
+  return <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white p-4 shadow-sm">
         <div className="flex justify-between items-center">
@@ -23,7 +11,7 @@ const Dashboard = () => {
               <div className="bg-emerald-500 w-8 h-8 rounded-full -mr-2"></div>
               <div className="bg-black w-8 h-8 rounded-full z-10 flex items-center justify-center">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M2 6C2 4.89543 2.89543 4 4 4H9L11 6H20C21.1046 6 22 6.89543 22 8V18C22 19.1046 21.1046 20 20 20H4C2.89543 20 2 19.1046 2 18V6Z" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M2 6C2 4.89543 2.89543 4 4 4H9L11 6H20C21.1046 6 22 6.89543 22 8V18C22 19.1046 21.1046 20 20 20H4C2.89543 20 2 19.1046 2 18V6Z" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
             </div>
@@ -57,7 +45,7 @@ const Dashboard = () => {
               <p className="text-white/80 text-sm">NBFC Wallet</p>
               <p className="font-medium">₹ 150.00</p>
             </div>
-            <Button variant="outline" className="text-white border-white hover:bg-white/20">
+            <Button variant="outline" className="border-white hover:bg-white/20 text-green-50">
               Top up
             </Button>
           </div>
@@ -190,8 +178,6 @@ const Dashboard = () => {
           </button>
         </div>
       </nav>
-    </div>
-  );
+    </div>;
 };
-
 export default Dashboard;
