@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CreditCard, Wallet, Phone, Bell, Home, User, Settings, ArrowRight, LogOut } from 'lucide-react';
 import { useAuth } from "@/contexts/AuthContext";
 import { ProfileEditSheet } from "@/components/ProfileEditSheet";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -49,14 +51,16 @@ const Dashboard = () => {
                       <User className="mr-2 h-4 w-4" />
                       <span>Edit Profile</span>
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start"
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
-                    </Button>
+                    <Link to="/settings">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-start"
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                      </Button>
+                    </Link>
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -218,10 +222,10 @@ const Dashboard = () => {
             <CreditCard size={20} />
             <span className="text-xs mt-1">Plans</span>
           </button>
-          <button className="flex flex-col items-center p-2 text-gray-500">
-            <User size={20} />
-            <span className="text-xs mt-1">Profile</span>
-          </button>
+          <Link to="/settings" className="flex flex-col items-center p-2 text-gray-500">
+            <Settings size={20} />
+            <span className="text-xs mt-1">Settings</span>
+          </Link>
         </div>
       </nav>
       
