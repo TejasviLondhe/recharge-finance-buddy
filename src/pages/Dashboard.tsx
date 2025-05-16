@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -6,13 +5,13 @@ import { CreditCard, Wallet, Phone, Bell, Home, User, Settings, ArrowRight, LogO
 import { useAuth } from "@/contexts/AuthContext";
 import { ProfileEditSheet } from "@/components/ProfileEditSheet";
 import { Link } from "react-router-dom";
-
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const {
+    user,
+    signOut
+  } = useAuth();
   const [profileSheetOpen, setProfileSheetOpen] = useState(false);
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+  return <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 p-4 shadow-sm">
         <div className="flex justify-between items-center">
@@ -43,31 +42,17 @@ const Dashboard = () => {
                     {user?.email || 'Your Account'}
                   </div>
                   <div className="border-t border-gray-100 dark:border-gray-700 pt-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start dark:text-gray-200 dark:hover:bg-gray-700" 
-                      onClick={() => setProfileSheetOpen(true)}
-                    >
+                    <Button variant="ghost" size="sm" className="w-full justify-start dark:text-gray-200 dark:hover:bg-gray-700" onClick={() => setProfileSheetOpen(true)}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Edit Profile</span>
                     </Button>
                     <Link to="/settings">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full justify-start dark:text-gray-200 dark:hover:bg-gray-700"
-                      >
+                      <Button variant="ghost" size="sm" className="w-full justify-start dark:text-gray-200 dark:hover:bg-gray-700">
                         <Settings className="mr-2 h-4 w-4" />
                         <span>Settings</span>
                       </Button>
                     </Link>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start text-red-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
-                      onClick={signOut}
-                    >
+                    <Button variant="ghost" size="sm" className="w-full justify-start text-red-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30" onClick={signOut}>
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
                     </Button>
@@ -96,7 +81,7 @@ const Dashboard = () => {
               <p className="text-white/80 text-sm">NBFC Wallet</p>
               <p className="font-medium">₹ 150.00</p>
             </div>
-            <Button variant="outline" className="border-white hover:bg-white/20 text-green-50">
+            <Button variant="outline" className="border-white text-green-50 bg-green-400 hover:bg-green-300">
               Top up
             </Button>
           </div>
@@ -231,11 +216,7 @@ const Dashboard = () => {
       </nav>
       
       {/* Profile Edit Sheet */}
-      <ProfileEditSheet 
-        isOpen={profileSheetOpen} 
-        onClose={() => setProfileSheetOpen(false)} 
-      />
-    </div>
-  );
+      <ProfileEditSheet isOpen={profileSheetOpen} onClose={() => setProfileSheetOpen(false)} />
+    </div>;
 };
 export default Dashboard;
