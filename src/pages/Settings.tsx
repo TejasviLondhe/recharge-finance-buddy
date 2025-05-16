@@ -27,6 +27,7 @@ const Settings = () => {
   // Theme settings
   const [theme, setTheme] = useState<'light' | 'dark'>(getTheme());
   const [showThemeDialog, setShowThemeDialog] = useState(false);
+  const [pendingTheme, setPendingTheme] = useState<'light' | 'dark'>('light');
   
   // Language settings
   const [language, setLanguage] = useState('english');
@@ -44,11 +45,8 @@ const Settings = () => {
   }, []);
 
   const handleThemeChange = (newTheme: 'light' | 'dark') => {
-    if (newTheme === 'dark') {
-      setShowThemeDialog(true);
-    } else {
-      applyThemeChange('light');
-    }
+    setPendingTheme(newTheme);
+    setShowThemeDialog(true);
   };
 
   const applyThemeChange = (newTheme: 'light' | 'dark') => {
@@ -94,18 +92,22 @@ const Settings = () => {
       <AlertDialog open={showThemeDialog} onOpenChange={setShowThemeDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Switch to Dark Mode?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Switch to {pendingTheme.charAt(0).toUpperCase() + pendingTheme.slice(1)} Mode?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Would you like to change the app theme to dark mode for a better low-light experience?
+              {pendingTheme === 'dark' 
+                ? "Would you like to change the app theme to dark mode for a better low-light experience?"
+                : "Would you like to change the app theme to light mode?"}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => applyThemeChange('dark')}
+              onClick={() => applyThemeChange(pendingTheme)}
               className="bg-emerald-500 hover:bg-emerald-600"
             >
-              Enable Dark Mode
+              Enable {pendingTheme.charAt(0).toUpperCase() + pendingTheme.slice(1)} Mode
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
