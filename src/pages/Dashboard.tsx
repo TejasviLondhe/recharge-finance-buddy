@@ -81,7 +81,7 @@ const Dashboard = () => {
               <p className="text-white/80 text-sm">NBFC Wallet</p>
               <p className="font-medium">₹ 150.00</p>
             </div>
-            <Button variant="outline" className="border-white text-green-50 bg-green-400 hover:bg-green-300">
+            <Button variant="outline" className="border-white text-green-50 bg-emerald-400 hover:bg-emerald-300">
               Top up
             </Button>
           </div>
