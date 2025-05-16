@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,11 +8,13 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from "@/hooks/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon } from 'lucide-react';
 
 type AuthMode = 'login' | 'signup' | 'otp' | 'phone' | 'forgot-password';
 
 const Auth = () => {
-  const [mode, setMode] = useState<AuthMode>('phone');
+  const [mode, setMode] = useState<AuthMode>('login'); // Changed default to 'login' instead of 'phone'
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -209,6 +212,14 @@ const Auth = () => {
             <img src="/assets/facebook.svg" alt="Facebook" className="w-6 h-6" />
           </button>
         </div>
+
+        <Alert variant="info" className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+          <InfoIcon className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+          <AlertTitle className="text-blue-800 dark:text-blue-300">Phone authentication unavailable</AlertTitle>
+          <AlertDescription className="text-blue-700 dark:text-blue-400 text-sm">
+            Phone authentication requires a Supabase project with an SMS provider configured. Please use email authentication for now.
+          </AlertDescription>
+        </Alert>
         
         <p className="text-center text-sm text-gray-500 dark:text-gray-400">
           Don't have an account? 
