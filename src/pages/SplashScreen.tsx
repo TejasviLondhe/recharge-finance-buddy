@@ -15,7 +15,7 @@ const SplashScreen = () => {
   }, [navigate]);
   
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-emerald-500">
+    <div className="flex flex-col items-center justify-center h-screen bg-emerald-500 dark:bg-emerald-700">
       <div className="relative">
         <div className="absolute left-0 top-0 w-16 h-16 bg-black rounded-full"></div>
         <div className="absolute right-0 top-0 w-16 h-16 bg-white rounded-full flex items-center justify-center ml-8">

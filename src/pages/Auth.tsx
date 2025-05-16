@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -105,12 +106,12 @@ const Auth = () => {
   
   const renderLogin = () => (
     <>
-      <h1 className="text-2xl font-bold mb-8">Log in</h1>
+      <h1 className="text-2xl font-bold mb-8 dark:text-white">Log in</h1>
       {renderLogo()}
       
       <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">
         <div>
-          <label className="text-sm text-gray-500 mb-1 block">Email Address</label>
+          <label className="text-sm text-gray-500 dark:text-gray-400 mb-1 block">Email Address</label>
           <Input 
             type="email" 
             placeholder="your.email@example.com"
@@ -122,7 +123,7 @@ const Auth = () => {
         </div>
         
         <div className="relative">
-          <label className="text-sm text-gray-500 mb-1 block">Password</label>
+          <label className="text-sm text-gray-500 dark:text-gray-400 mb-1 block">Password</label>
           <div className="relative">
             <Input 
               type={showPassword ? "text" : "password"} 
@@ -135,7 +136,7 @@ const Auth = () => {
             <button 
               type="button" 
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -161,20 +162,20 @@ const Auth = () => {
         </div>
         
         <div className="relative flex items-center justify-center">
-          <hr className="w-full border-t border-gray-300" />
-          <span className="absolute bg-white px-3 text-sm text-gray-500">or</span>
+          <hr className="w-full border-t border-gray-300 dark:border-gray-700" />
+          <span className="absolute bg-white dark:bg-gray-900 px-3 text-sm text-gray-500 dark:text-gray-400">or</span>
         </div>
         
         <div className="flex justify-center space-x-6">
-          <button type="button" className="p-3 border rounded-full">
+          <button type="button" className="p-3 border border-gray-300 dark:border-gray-700 rounded-full">
             <img src="/assets/google.svg" alt="Google" className="w-6 h-6" />
           </button>
-          <button type="button" className="p-3 border rounded-full">
+          <button type="button" className="p-3 border border-gray-300 dark:border-gray-700 rounded-full">
             <img src="/assets/facebook.svg" alt="Facebook" className="w-6 h-6" />
           </button>
         </div>
         
-        <p className="text-center text-sm text-gray-500">
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400">
           Don't have an account? 
           <button 
             type="button"
@@ -190,12 +191,12 @@ const Auth = () => {
   
   const renderSignup = () => (
     <>
-      <h1 className="text-2xl font-bold mb-8">Sign Up</h1>
+      <h1 className="text-2xl font-bold mb-8 dark:text-white">Sign Up</h1>
       {renderLogo()}
       
       <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">
         <div>
-          <label className="text-sm text-gray-500 mb-1 block">Full Name</label>
+          <label className="text-sm text-gray-500 dark:text-gray-400 mb-1 block">Full Name</label>
           <Input 
             type="text" 
             placeholder="John Doe"
@@ -206,7 +207,7 @@ const Auth = () => {
         </div>
 
         <div>
-          <label className="text-sm text-gray-500 mb-1 block">Email Address</label>
+          <label className="text-sm text-gray-500 dark:text-gray-400 mb-1 block">Email Address</label>
           <Input 
             type="email" 
             placeholder="your.email@example.com"
@@ -218,7 +219,7 @@ const Auth = () => {
         </div>
         
         <div>
-          <label className="text-sm text-gray-500 mb-1 block">Phone Number (Optional)</label>
+          <label className="text-sm text-gray-500 dark:text-gray-400 mb-1 block">Phone Number (Optional)</label>
           <Input 
             type="tel" 
             placeholder="+1 234 567 8900"
@@ -229,7 +230,7 @@ const Auth = () => {
         </div>
 
         <div className="relative">
-          <label className="text-sm text-gray-500 mb-1 block">Password</label>
+          <label className="text-sm text-gray-500 dark:text-gray-400 mb-1 block">Password</label>
           <div className="relative">
             <Input 
               type={showPassword ? "text" : "password"} 
@@ -242,7 +243,7 @@ const Auth = () => {
             <button 
               type="button" 
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -250,7 +251,7 @@ const Auth = () => {
         </div>
         
         <div className="relative">
-          <label className="text-sm text-gray-500 mb-1 block">Confirm Password</label>
+          <label className="text-sm text-gray-500 dark:text-gray-400 mb-1 block">Confirm Password</label>
           <div className="relative">
             <Input 
               type={showConfirmPassword ? "text" : "password"} 
@@ -263,7 +264,7 @@ const Auth = () => {
             <button 
               type="button" 
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
             >
               {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -279,20 +280,20 @@ const Auth = () => {
         </Button>
         
         <div className="relative flex items-center justify-center">
-          <hr className="w-full border-t border-gray-300" />
-          <span className="absolute bg-white px-3 text-sm text-gray-500">or</span>
+          <hr className="w-full border-t border-gray-300 dark:border-gray-700" />
+          <span className="absolute bg-white dark:bg-gray-900 px-3 text-sm text-gray-500 dark:text-gray-400">or</span>
         </div>
         
         <div className="flex justify-center space-x-6">
-          <button type="button" className="p-3 border rounded-full">
+          <button type="button" className="p-3 border border-gray-300 dark:border-gray-700 rounded-full">
             <img src="/assets/google.svg" alt="Google" className="w-6 h-6" />
           </button>
-          <button type="button" className="p-3 border rounded-full">
+          <button type="button" className="p-3 border border-gray-300 dark:border-gray-700 rounded-full">
             <img src="/assets/facebook.svg" alt="Facebook" className="w-6 h-6" />
           </button>
         </div>
         
-        <p className="text-center text-sm text-gray-500">
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400">
           Already have an account? 
           <button 
             type="button"
@@ -316,12 +317,12 @@ const Auth = () => {
           <ArrowLeft size={18} />
         </button>
         
-        <h1 className="text-2xl font-bold mb-2">Forgot Password</h1>
-        <p className="text-gray-500 mb-8">Enter your email to receive reset instructions</p>
+        <h1 className="text-2xl font-bold mb-2 dark:text-white">Forgot Password</h1>
+        <p className="text-gray-500 dark:text-gray-400 mb-8">Enter your email to receive reset instructions</p>
         
         <form onSubmit={handleSubmit} className="space-y-8">
           <div>
-            <label className="text-sm text-gray-500 mb-1 block">Email Address</label>
+            <label className="text-sm text-gray-500 dark:text-gray-400 mb-1 block">Email Address</label>
             <Input 
               type="email" 
               placeholder="your.email@example.com"
@@ -345,7 +346,7 @@ const Auth = () => {
   );
   
   return (
-    <div className="min-h-screen bg-white px-4 py-8 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-white dark:bg-gray-900 px-4 py-8 flex flex-col items-center justify-center">
       {mode === 'login' && renderLogin()}
       {mode === 'signup' && renderSignup()}
       {mode === 'forgot-password' && renderForgotPassword()}

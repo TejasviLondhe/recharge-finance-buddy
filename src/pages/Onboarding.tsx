@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 
@@ -68,7 +68,7 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col justify-between">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col justify-between">
       {/* Content */}
       <div className="flex-1 flex items-center justify-center p-6">
         <div className={`max-w-md w-full transition-all duration-500 transform ${slideVariants.visible}`}>
@@ -87,10 +87,10 @@ const Onboarding = () => {
           
           {/* Text content */}
           <div className="text-center space-y-4">
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               {slides[currentSlide].title}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               {slides[currentSlide].description}
             </p>
           </div>
@@ -106,7 +106,7 @@ const Onboarding = () => {
             className={`w-2 h-2 rounded-full transition-all ${
               currentSlide === index 
                 ? "w-6 bg-emerald-500" 
-                : "bg-gray-300"
+                : "bg-gray-300 dark:bg-gray-600"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />
