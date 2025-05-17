@@ -213,10 +213,10 @@ const Auth = () => {
           </button>
         </div>
 
-        <Alert variant="info" className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-          <InfoIcon className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-          <AlertTitle className="text-blue-800 dark:text-blue-300">Phone authentication unavailable</AlertTitle>
-          <AlertDescription className="text-blue-700 dark:text-blue-400 text-sm">
+        <Alert variant="info">
+          <InfoIcon className="h-4 w-4" />
+          <AlertTitle>Phone authentication unavailable</AlertTitle>
+          <AlertDescription className="text-sm">
             Phone authentication requires a Supabase project with an SMS provider configured. Please use email authentication for now.
           </AlertDescription>
         </Alert>
