@@ -1,8 +1,6 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '../integrations/supabase/client';
-import { firebaseAuth } from '@/integrations/firebase/client';
-import { onAuthStateChanged as firebaseOnAuthStateChanged } from 'firebase/auth';
 import { Session, User } from '@supabase/supabase-js';
 import { toast } from "@/hooks/use-toast";
 
@@ -27,16 +25,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Sign out function from both Firebase and Supabase
+  // Sign out function from Supabase
   const signOut = async () => {
     try {
       // Sign out from Supabase
       await supabase.auth.signOut();
-      
-      // Sign out from Firebase if it's initialized
-      if (firebaseAuth) {
-        await firebaseAuth.signOut();
-      }
       
       toast.success("Signed out successfully");
     } catch (error: any) {
@@ -57,25 +50,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Setup auth listeners for both Firebase and Supabase
+  // Setup auth listeners for Supabase
   useEffect(() => {
-    // Set up Supabase auth state listener FIRST
+    // Set up Supabase auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Supabase auth state changed:", event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setLoading(false);
-      }
-    );
-
-    // Set up Firebase auth state listener
-    const firebaseUnsubscribe = firebaseOnAuthStateChanged(
-      firebaseAuth,
-      async (firebaseUser) => {
-        console.log("Firebase auth state changed:", firebaseUser ? "SIGNED_IN" : "SIGNED_OUT");
-        // If Firebase user exists but no Supabase session, we can authenticate with Supabase here
-        // This is handled in the useFirebaseAuth hook for now
       }
     );
 
@@ -88,7 +71,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       subscription.unsubscribe();
-      firebaseUnsubscribe();
     };
   }, []);
 

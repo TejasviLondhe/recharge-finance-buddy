@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type AuthStep = 'phone' | 'otp';
 
@@ -18,11 +19,13 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onBackToEmail }) => {
   const [step, setStep] = useState<AuthStep>('phone');
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { sendVerificationCode, verifyOtp, loading } = useFirebaseAuth();
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
     // Validate phone number
     if (!phoneNumber || phoneNumber.length < 10) {
@@ -32,34 +35,76 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onBackToEmail }) => {
     
     // Format phone number if needed
     let formattedNumber = phoneNumber;
-    if (!phoneNumber.startsWith('+')) {
-      formattedNumber = `+${phoneNumber}`; // Add + if not present
+    if (!formattedNumber.startsWith('+')) {
+      formattedNumber = `+${formattedNumber}`; // Add + if not present
     }
     
-    // Send verification code
-    const success = await sendVerificationCode(formattedNumber, 'recaptcha-container');
-    if (success) {
+    setLoading(true);
+    
+    try {
+      // Use Supabase's phone OTP sign-in method
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: formattedNumber,
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("OTP sent to your phone");
       setStep('otp');
+    } catch (error: any) {
+      setError(error.message || "Failed to send OTP. Make sure Twilio is properly configured.");
+      toast.error("Failed to send OTP");
+      console.error("Error sending OTP:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
     if (!otp || otp.length !== 6) {
       toast.error("Please enter a valid 6-digit OTP");
       return;
     }
     
-    const success = await verifyOtp(otp);
-    if (success) {
+    setLoading(true);
+    
+    try {
+      // Verify OTP using Supabase
+      const { error } = await supabase.auth.verifyOtp({
+        phone: phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`,
+        token: otp,
+        type: 'sms'
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("Phone number verified successfully");
       navigate('/dashboard');
+    } catch (error: any) {
+      setError(error.message || "Invalid OTP. Please try again.");
+      toast.error("Invalid OTP");
+      console.error("Error verifying OTP:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const renderPhoneInput = () => (
     <>
-      <h1 className="text-2xl font-bold mb-8 dark:text-white">Login with Phone</h1>
+      <h1 className="text-2xl font-bold mb-4 dark:text-white">Login with Phone</h1>
+      
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <form onSubmit={handleSendCode} className="space-y-6 w-full max-w-sm">
         <div>
@@ -76,9 +121,6 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onBackToEmail }) => {
             Enter your phone number with country code (e.g., +1 for USA)
           </p>
         </div>
-        
-        {/* Hidden div for reCAPTCHA */}
-        <div id="recaptcha-container"></div>
         
         <Button 
           type="submit"
@@ -116,7 +158,13 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onBackToEmail }) => {
         </button>
         
         <h1 className="text-2xl font-bold mb-2 dark:text-white">Verify OTP</h1>
-        <p className="text-gray-500 dark:text-gray-400 mb-8">Enter the 6-digit code sent to {phoneNumber}</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-4">Enter the 6-digit code sent to {phoneNumber}</p>
+        
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         
         <form onSubmit={handleVerifyOtp} className="space-y-6">
           <div className="flex flex-col items-center space-y-2">
