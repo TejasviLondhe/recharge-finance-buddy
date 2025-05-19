@@ -12,14 +12,15 @@ import Settings from "./pages/Settings";
 import SplashScreen from "./pages/SplashScreen";
 import { AuthProvider } from "./contexts/AuthContext";
 
+// Create a new QueryClient instance
 const queryClient = new QueryClient();
 
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
-          <TooltipProvider>
+      <TooltipProvider>
+        <AuthProvider>
+          <BrowserRouter>
             <Toaster />
             <Sonner />
             <Routes>
@@ -31,9 +32,9 @@ const App = () => {
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </TooltipProvider>
-        </BrowserRouter>
-      </AuthProvider>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 };
