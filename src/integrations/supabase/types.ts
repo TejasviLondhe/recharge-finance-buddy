@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          id: number
+          three_month_cashback: number
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          three_month_cashback?: number
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          three_month_cashback?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           full_name: string | null
@@ -30,12 +48,77 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_balance: {
+        Row: {
+          balance: number
+          id: string
+          updated_at: string | null
+          use_wallet_for_recharge: boolean
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          id?: string
+          updated_at?: string | null
+          use_wallet_for_recharge?: boolean
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          id?: string
+          updated_at?: string | null
+          use_wallet_for_recharge?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string
+          id: string
+          reference: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description: string
+          id?: string
+          reference?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string
+          id?: string
+          reference?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      process_recharge: {
+        Args: {
+          p_user_id: string
+          p_plan_id: string
+          p_plan_name: string
+          p_plan_amount: number
+          p_wallet_amount: number
+          p_is_three_month: boolean
+          p_provider: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
