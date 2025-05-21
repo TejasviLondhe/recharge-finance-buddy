@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import SplashScreen from "./pages/SplashScreen";
+import Wallet from "./pages/Wallet";
 import { AuthProvider } from "./contexts/AuthContext";
 
 // Create a new QueryClient instance
@@ -29,6 +30,7 @@ const App = () => {
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/wallet" element={<Wallet />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

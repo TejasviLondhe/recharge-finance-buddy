@@ -1,16 +1,114 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CreditCard, Wallet, Phone, Bell, Home, User, Settings, ArrowRight, LogOut } from 'lucide-react';
+import { CreditCard, Wallet, Phone, Bell, Home, User, Settings, ArrowRight, LogOut, History } from 'lucide-react';
 import { useAuth } from "@/contexts/AuthContext";
 import { ProfileEditSheet } from "@/components/ProfileEditSheet";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import RechargeDialog from "@/components/RechargeDialog";
+
+// Sample plan type
+interface Plan {
+  id: string;
+  name: string;
+  provider: string;
+  amount: number;
+  isThreeMonth: boolean;
+  data: string;
+  calls: string;
+  sms: string;
+  validity: string;
+}
+
+// Sample 3-month plans
+const threeMonthPlans: Plan[] = [
+  {
+    id: 'jio-3month',
+    provider: 'Jio',
+    name: 'Jio 3-Month Special',
+    amount: 900,
+    isThreeMonth: true,
+    data: '2GB/day',
+    calls: 'Unlimited',
+    sms: '100/day',
+    validity: '84 days'
+  },
+  {
+    id: 'airtel-3month',
+    provider: 'Airtel',
+    name: 'Airtel 3-Month Value',
+    amount: 699,
+    isThreeMonth: true,
+    data: '1.5GB/day',
+    calls: 'Unlimited',
+    sms: '100/day',
+    validity: '84 days'
+  },
+  {
+    id: 'vi-3month',
+    provider: 'Vi',
+    name: 'Vi 3-Month Weekend',
+    amount: 749,
+    isThreeMonth: true,
+    data: '1.5GB/day',
+    calls: 'Unlimited',
+    sms: '100/day',
+    validity: '84 days'
+  }
+];
+
 const Dashboard = () => {
-  const {
-    user,
-    signOut
-  } = useAuth();
+  const { user, signOut } = useAuth();
   const [profileSheetOpen, setProfileSheetOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
+  
+  useEffect(() => {
+    if (user) {
+      fetchWalletBalance();
+    }
+  }, [user]);
+  
+  const fetchWalletBalance = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('wallet_balance')
+        .select('balance')
+        .eq('user_id', user?.id)
+        .single();
+        
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching wallet balance:', error);
+        return;
+      }
+      
+      if (data) {
+        setWalletBalance(data.balance);
+      } else {
+        // Create wallet balance record if it doesn't exist
+        await supabase
+          .from('wallet_balance')
+          .insert({
+            user_id: user?.id,
+            balance: 0,
+            use_wallet_for_recharge: true
+          });
+        setWalletBalance(0);
+      }
+    } catch (error) {
+      console.error('Error handling wallet balance:', error);
+    }
+  };
+  
+  const handlePlanDetails = (plan: Plan) => {
+    setSelectedPlan(plan);
+    setRechargeDialogOpen(true);
+  };
+  
   return <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 p-4 shadow-sm">
@@ -65,7 +163,7 @@ const Dashboard = () => {
       </header>
       
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 pb-20">
         {/* Welcome Section */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold dark:text-white">Welcome back, {user?.user_metadata?.full_name || 'User'}!</h2>
@@ -79,11 +177,21 @@ const Dashboard = () => {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-white/80 text-sm">NBFC Wallet</p>
-              <p className="font-medium">₹ 150.00</p>
+              <div className="flex items-center">
+                <p className="font-medium">₹ {walletBalance.toFixed(2)}</p>
+                <Link to="/wallet">
+                  <Button variant="link" className="p-0 h-auto text-white ml-2">
+                    <History size={14} className="mr-1" />
+                    <span className="text-xs">History</span>
+                  </Button>
+                </Link>
+              </div>
             </div>
-            <Button variant="outline" className="border-white text-green-50 bg-emerald-400 hover:bg-emerald-300">
-              Top up
-            </Button>
+            <Link to="/wallet">
+              <Button variant="outline" className="border-white text-green-50 bg-emerald-400 hover:bg-emerald-300">
+                View Wallet
+              </Button>
+            </Link>
           </div>
         </section>
         
@@ -103,12 +211,14 @@ const Dashboard = () => {
               </div>
               <span className="text-sm text-gray-700 dark:text-gray-300">Pay EMI</span>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm flex flex-col items-center">
-              <div className="bg-emerald-100 dark:bg-emerald-900/30 p-3 rounded-full mb-2">
-                <Wallet className="h-6 w-6 text-emerald-500" />
+            <Link to="/wallet" className="block">
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm flex flex-col items-center">
+                <div className="bg-emerald-100 dark:bg-emerald-900/30 p-3 rounded-full mb-2">
+                  <Wallet className="h-6 w-6 text-emerald-500" />
+                </div>
+                <span className="text-sm text-gray-700 dark:text-gray-300">Wallet</span>
               </div>
-              <span className="text-sm text-gray-700 dark:text-gray-300">Wallet</span>
-            </div>
+            </Link>
           </div>
         </section>
         
@@ -162,32 +272,32 @@ const Dashboard = () => {
           
           <div className="overflow-x-auto -mx-4 px-4">
             <div className="flex space-x-4">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-4 shadow-sm min-w-[270px] text-white">
-                <p className="text-white/80 mb-1">Jio Special</p>
-                <h4 className="font-bold text-lg mb-2">3 Months @ ₹900</h4>
-                <p className="text-sm mb-4">Save ₹147 + get ₹50 in wallet</p>
-                <Button className="bg-white text-indigo-600 hover:bg-white/90">
-                  View Details
-                </Button>
-              </div>
-              
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-4 shadow-sm min-w-[270px] text-white">
-                <p className="text-white/80 mb-1">Airtel Offer</p>
-                <h4 className="font-bold text-lg mb-2">3 Months @ ₹699</h4>
-                <p className="text-sm mb-4">Save ₹98 + get ₹40 in wallet</p>
-                <Button className="bg-white text-pink-600 hover:bg-white/90">
-                  View Details
-                </Button>
-              </div>
-              
-              <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 shadow-sm min-w-[270px] text-white">
-                <p className="text-white/80 mb-1">Vi Weekend</p>
-                <h4 className="font-bold text-lg mb-2">3 Months @ ₹749</h4>
-                <p className="text-sm mb-4">Save ₹78 + get ₹45 in wallet</p>
-                <Button className="bg-white text-orange-600 hover:bg-white/90">
-                  View Details
-                </Button>
-              </div>
+              {threeMonthPlans.map((plan) => (
+                <div 
+                  key={plan.id}
+                  className={`bg-gradient-to-r ${
+                    plan.provider === 'Jio' ? 'from-blue-500 to-indigo-600' :
+                    plan.provider === 'Airtel' ? 'from-purple-500 to-pink-500' :
+                    'from-amber-500 to-orange-500'
+                  } rounded-xl p-4 shadow-sm min-w-[270px] text-white`}
+                >
+                  <p className="text-white/80 mb-1">{plan.provider} Special</p>
+                  <h4 className="font-bold text-lg mb-2">3 Months @ ₹{plan.amount}</h4>
+                  <p className="text-sm mb-4">
+                    {plan.data} | {plan.validity} | Get cashback in wallet!
+                  </p>
+                  <Button 
+                    className={`bg-white hover:bg-white/90 ${
+                      plan.provider === 'Jio' ? 'text-indigo-600' :
+                      plan.provider === 'Airtel' ? 'text-pink-600' :
+                      'text-orange-600'
+                    }`}
+                    onClick={() => handlePlanDetails(plan)}
+                  >
+                    View Details
+                  </Button>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -196,18 +306,18 @@ const Dashboard = () => {
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 py-2 px-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex justify-around items-center">
-          <button className="flex flex-col items-center p-2 text-emerald-500">
+          <div className="flex flex-col items-center p-2 text-emerald-500">
             <Home size={20} />
             <span className="text-xs mt-1">Home</span>
-          </button>
-          <button className="flex flex-col items-center p-2 text-gray-500 dark:text-gray-400">
+          </div>
+          <Link to="/wallet" className="flex flex-col items-center p-2 text-gray-500 dark:text-gray-400">
             <Wallet size={20} />
             <span className="text-xs mt-1">Wallet</span>
-          </button>
-          <button className="flex flex-col items-center p-2 text-gray-500 dark:text-gray-400">
+          </Link>
+          <div className="flex flex-col items-center p-2 text-gray-500 dark:text-gray-400">
             <CreditCard size={20} />
             <span className="text-xs mt-1">Plans</span>
-          </button>
+          </div>
           <Link to="/settings" className="flex flex-col items-center p-2 text-gray-500 dark:text-gray-400">
             <Settings size={20} />
             <span className="text-xs mt-1">Settings</span>
@@ -217,6 +327,14 @@ const Dashboard = () => {
       
       {/* Profile Edit Sheet */}
       <ProfileEditSheet isOpen={profileSheetOpen} onClose={() => setProfileSheetOpen(false)} />
+      
+      {/* Recharge Dialog */}
+      <RechargeDialog 
+        isOpen={rechargeDialogOpen} 
+        onClose={() => setRechargeDialogOpen(false)} 
+        plan={selectedPlan}
+      />
     </div>;
 };
+
 export default Dashboard;
