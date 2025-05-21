@@ -8,7 +8,7 @@ import { Wallet, ArrowUp, ArrowDown, History, CreditCard, Home, Settings, ArrowR
 import { useAuth } from "@/contexts/AuthContext";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,6 +26,7 @@ interface Transaction {
 const WalletPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [walletBalance, setWalletBalance] = useState(0);
   const [useWalletForRecharge, setUseWalletForRecharge] = useState(true);
@@ -44,7 +45,7 @@ const WalletPage = () => {
       // Fetch wallet balance
       const { data: walletData, error: walletError } = await supabase
         .from('wallet_balance')
-        .select('balance')
+        .select('balance, use_wallet_for_recharge')
         .eq('user_id', user?.id)
         .single();
         
@@ -54,17 +55,7 @@ const WalletPage = () => {
       
       if (walletData) {
         setWalletBalance(walletData.balance);
-      }
-      
-      // Fetch wallet settings
-      const { data: settingsData } = await supabase
-        .from('user_settings')
-        .select('use_wallet_for_recharge')
-        .eq('user_id', user?.id)
-        .single();
-        
-      if (settingsData) {
-        setUseWalletForRecharge(settingsData.use_wallet_for_recharge);
+        setUseWalletForRecharge(walletData.use_wallet_for_recharge);
       }
       
       // Fetch transactions
@@ -79,7 +70,14 @@ const WalletPage = () => {
         throw transactionsError;
       }
       
-      setTransactions(transactionsData || []);
+      // Ensure the type property matches our Transaction type
+      if (transactionsData) {
+        const typedTransactions = transactionsData.map(tx => ({
+          ...tx,
+          type: tx.type as 'credit' | 'debit'
+        }));
+        setTransactions(typedTransactions);
+      }
     } catch (error: any) {
       console.error('Error fetching wallet data:', error);
       toast({
@@ -96,13 +94,13 @@ const WalletPage = () => {
     try {
       setUseWalletForRecharge(checked);
       
-      // Update user settings in database
+      // Update wallet settings in database
       const { error } = await supabase
-        .from('user_settings')
-        .upsert({
-          user_id: user?.id,
+        .from('wallet_balance')
+        .update({
           use_wallet_for_recharge: checked
-        });
+        })
+        .eq('user_id', user?.id);
         
       if (error) throw error;
       

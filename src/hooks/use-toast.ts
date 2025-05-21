@@ -180,32 +180,19 @@ export function useToast() {
   }
 }
 
-// Define the type for our toast object
-interface ToastApi {
-  toast: (props: Omit<ToasterToast, "id">) => { 
+// Define the type for our toast functions
+interface ToastFunction {
+  (props: Omit<ToasterToast, "id">): { 
     id: string; 
     dismiss: () => void; 
     update: (props: ToasterToast) => void;
   };
-  success: (title: string, description?: string) => { 
-    id: string; 
-    dismiss: () => void; 
-    update: (props: ToasterToast) => void;
-  };
-  error: (title: string, description?: string) => { 
-    id: string; 
-    dismiss: () => void; 
-    update: (props: ToasterToast) => void;
-  };
-  dismiss: (toastId?: string) => void;
-  dismissAll: () => void;
 }
 
-// Create our toast object with helper methods
-const toast: ToastApi = {
-  dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
-  dismissAll: () => dispatch({ type: actionTypes.DISMISS_TOAST }),
-  toast: (props: Omit<ToasterToast, "id">) => {
+// Export a properly typed toast object
+const toast = {
+  // Base toast function
+  toast: ((props: Omit<ToasterToast, "id">) => {
     const id = genId()
     
     dispatch({
@@ -229,8 +216,10 @@ const toast: ToastApi = {
           toast: { ...props, id },
         }),
     }
-  },
-  success: (title: string, description?: string) => {
+  }) as ToastFunction,
+  
+  // Success toast variant
+  success: ((title: string, description?: string) => {
     const id = genId()
     
     dispatch({
@@ -257,8 +246,14 @@ const toast: ToastApi = {
           toast: { ...props, id },
         }),
     }
+  }) as (title: string, description?: string) => { 
+    id: string; 
+    dismiss: () => void; 
+    update: (props: ToasterToast) => void;
   },
-  error: (title: string, description?: string) => {
+  
+  // Error toast variant
+  error: ((title: string, description?: string) => {
     const id = genId()
     
     dispatch({
@@ -284,7 +279,15 @@ const toast: ToastApi = {
           toast: { ...props, id },
         }),
     }
+  }) as (title: string, description?: string) => { 
+    id: string; 
+    dismiss: () => void; 
+    update: (props: ToasterToast) => void;
   },
+  
+  // Add these methods to properly expose them
+  dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
+  dismissAll: () => dispatch({ type: actionTypes.DISMISS_TOAST }),
 }
 
 export { toast }

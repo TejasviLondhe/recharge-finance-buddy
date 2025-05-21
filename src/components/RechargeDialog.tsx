@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Wallet, CreditCard, AlertCircle } from 'lucide-react';
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,6 +30,7 @@ interface RechargeDialogProps {
 
 const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [useWallet, setUseWallet] = useState(true);
   const [walletBalance, setWalletBalance] = useState(0);
   const [cashbackAmount, setCashbackAmount] = useState(0);
