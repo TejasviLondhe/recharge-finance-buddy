@@ -24,8 +24,8 @@ const AdminSettings = () => {
       
       // Fetch admin settings
       const { data, error } = await supabase
-        .from('admin_settings')
-        .select('three_month_cashback')
+        .from('finance_settings')
+        .select('cashback_amount')
         .single();
         
       if (error && error.code !== 'PGRST116') {
@@ -33,15 +33,11 @@ const AdminSettings = () => {
       }
       
       if (data) {
-        setCashbackAmount(data.three_month_cashback);
+        setCashbackAmount(data.cashback_amount);
       }
     } catch (error: any) {
       console.error('Error fetching admin settings:', error);
-      toast({
-        title: "Failed to load settings",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast.error('Failed to load settings', error.message);
     } finally {
       setLoading(false);
     }
@@ -53,25 +49,18 @@ const AdminSettings = () => {
       
       // Save admin settings
       const { error } = await supabase
-        .from('admin_settings')
+        .from('finance_settings')
         .upsert({
           id: 1, // Single record for all admin settings
-          three_month_cashback: cashbackAmount
+          cashback_amount: cashbackAmount
         });
         
       if (error) throw error;
       
-      toast({
-        title: "Settings Saved",
-        description: "Cashback amount updated successfully."
-      });
+      toast.success('Settings Saved', 'Cashback amount updated successfully.');
     } catch (error: any) {
       console.error('Error saving admin settings:', error);
-      toast({
-        title: "Failed to save settings",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast.error('Failed to save settings', error.message);
     } finally {
       setSaving(false);
     }

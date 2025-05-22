@@ -1,31 +1,28 @@
 
-import { clsx, type ClassValue } from "clsx"
+import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-
+ 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Function to toggle theme between light and dark
-export function toggleTheme(theme: 'light' | 'dark') {
-  if (theme === 'dark') {
-    document.documentElement.classList.add('dark')
-  } else {
-    document.documentElement.classList.remove('dark')
-  }
-  
-  localStorage.setItem('theme', theme)
+export function getTheme(): string {
+  return localStorage.getItem("theme") || "dark";
 }
 
-// Function to get theme from localStorage or system preference
-export function getTheme(): 'light' | 'dark' {
-  if (typeof window === 'undefined') return 'light'
+export function toggleTheme(theme?: string): void {
+  const currentTheme = theme || getTheme();
+  const newTheme = currentTheme === "light" ? "dark" : "light";
   
-  const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
-  
-  if (storedTheme) {
-    return storedTheme
-  }
-  
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  localStorage.setItem("theme", newTheme);
+  document.documentElement.classList.remove(currentTheme);
+  document.documentElement.classList.add(newTheme);
+}
+
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
