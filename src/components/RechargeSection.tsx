@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useToastHelper } from "@/lib/toast-helpers";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import PlanCard from "./PlanCard";
@@ -12,7 +11,7 @@ import { RechargePlan, TelecomOperator } from "@/types";
 
 const RechargeSection = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { error } = useToastHelper();
   const [loading, setLoading] = useState(true);
   const [operators, setOperators] = useState<TelecomOperator[]>([]);
   const [plans, setPlans] = useState<Record<string, RechargePlan[]>>({});
@@ -49,7 +48,7 @@ const RechargeSection = () => {
       }
     } catch (error: any) {
       console.error('Error fetching operators:', error);
-      toast.error('Failed to load operators', error.message);
+      error('Failed to load operators', error.message);
     } finally {
       setLoading(false);
     }
@@ -82,7 +81,7 @@ const RechargeSection = () => {
       }
     } catch (error: any) {
       console.error('Error fetching plans:', error);
-      toast.error('Failed to load recharge plans', error.message);
+      error('Failed to load recharge plans', error.message);
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,3 @@
-
 export interface TelecomOperator {
   id: string;
   name: string;
@@ -64,6 +63,10 @@ export interface EMITransaction {
   reminder_sent?: boolean;
   created_at?: string;
   updated_at?: string;
+  user_recharges?: {
+    plan_id: string;
+    phone_number: string;
+  };
 }
 
 export interface Transaction {

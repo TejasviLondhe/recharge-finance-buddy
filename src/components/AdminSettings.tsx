@@ -6,13 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Settings, Save } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useToastHelper } from "@/lib/toast-helpers";
 
 const AdminSettings = () => {
   const [cashbackAmount, setCashbackAmount] = useState(50);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const { success, error } = useToastHelper();
   
   useEffect(() => {
     fetchSettings();
@@ -23,21 +23,21 @@ const AdminSettings = () => {
       setLoading(true);
       
       // Fetch admin settings
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('finance_settings')
         .select('cashback_amount')
         .single();
         
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
       }
       
       if (data) {
         setCashbackAmount(data.cashback_amount);
       }
-    } catch (error: any) {
-      console.error('Error fetching admin settings:', error);
-      toast.error('Failed to load settings', error.message);
+    } catch (err: any) {
+      console.error('Error fetching admin settings:', err);
+      error('Failed to load settings', err.message);
     } finally {
       setLoading(false);
     }
@@ -48,19 +48,19 @@ const AdminSettings = () => {
       setSaving(true);
       
       // Save admin settings
-      const { error } = await supabase
+      const { error: saveError } = await supabase
         .from('finance_settings')
         .upsert({
           id: 1, // Single record for all admin settings
           cashback_amount: cashbackAmount
         });
         
-      if (error) throw error;
+      if (saveError) throw saveError;
       
-      toast.success('Settings Saved', 'Cashback amount updated successfully.');
-    } catch (error: any) {
-      console.error('Error saving admin settings:', error);
-      toast.error('Failed to save settings', error.message);
+      success('Settings Saved', 'Cashback amount updated successfully.');
+    } catch (err: any) {
+      console.error('Error saving admin settings:', err);
+      error('Failed to save settings', err.message);
     } finally {
       setSaving(false);
     }

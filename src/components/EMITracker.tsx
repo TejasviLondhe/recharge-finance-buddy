@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Calendar, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { EMITransaction, RechargePlan } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToastHelper } from '@/lib/toast-helpers';
 import { formatCurrency } from '@/lib/utils';
 import { format, isPast, addDays } from 'date-fns';
 
@@ -16,7 +15,7 @@ interface EMITrackerProps {
 
 const EMITracker = ({ showAllEMIs = false }: EMITrackerProps) => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { success, error } = useToastHelper();
   const [loading, setLoading] = useState(false);
   const [emiTransactions, setEmiTransactions] = useState<EMITransaction[]>([]);
   const [plans, setPlans] = useState<Record<string, RechargePlan>>({});
@@ -86,7 +85,7 @@ const EMITracker = ({ showAllEMIs = false }: EMITrackerProps) => {
       }
     } catch (error: any) {
       console.error('Error fetching EMIs:', error);
-      toast.error('Failed to load EMI data', error.message);
+      error('Failed to load EMI data', error.message);
     } finally {
       setLoading(false);
     }
@@ -99,7 +98,7 @@ const EMITracker = ({ showAllEMIs = false }: EMITrackerProps) => {
       const transactionId = 'PAYMENT-' + Math.floor(Math.random() * 1000000);
       
       // Update EMI status
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('emi_transactions')
         .update({
           payment_status: 'paid',
@@ -108,15 +107,15 @@ const EMITracker = ({ showAllEMIs = false }: EMITrackerProps) => {
         })
         .eq('id', emiId);
         
-      if (error) throw error;
+      if (updateError) throw updateError;
       
-      toast.success('EMI Payment Successful', `Payment of ${formatCurrency(amount)} completed`);
+      success('EMI Payment Successful', `Payment of ${formatCurrency(amount)} completed`);
       
       // Refresh EMIs
       fetchEMIs();
-    } catch (error: any) {
-      console.error('Error paying EMI:', error);
-      toast.error('Payment Failed', error.message);
+    } catch (err: any) {
+      console.error('Error paying EMI:', err);
+      error('Payment Failed', err.message);
     }
   };
   

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,12 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useToastHelper } from "@/lib/toast-helpers";
 import { TelecomOperator } from '@/types';
 import { Switch } from '@/components/ui/switch';
 
 const CreatePlanForm = () => {
-  const { toast } = useToast();
+  const { success, error } = useToastHelper();
+  
   const [operators, setOperators] = useState<TelecomOperator[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -76,7 +76,7 @@ const CreatePlanForm = () => {
       }
     } catch (error: any) {
       console.error('Error fetching operators:', error);
-      toast.error('Failed to load operators', error.message);
+      error('Failed to load operators', error.message);
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ const CreatePlanForm = () => {
   
   const handleCreatePlan = async () => {
     if (!name || !operatorId || !amount || !validityDays || !data || !calls || !sms) {
-      toast.error('Validation Error', 'Please fill all required fields');
+      error('Validation Error', 'Please fill all required fields');
       return;
     }
     
@@ -116,7 +116,7 @@ const CreatePlanForm = () => {
       // Create financing option if enabled
       if (createFinancingOption && planData) {
         if (!discountedPrice || !initialPayment || !emiAmount || !emiCount) {
-          toast.error('Validation Error', 'Please fill all financing fields');
+          error('Validation Error', 'Please fill all financing fields');
           return;
         }
         
@@ -136,7 +136,7 @@ const CreatePlanForm = () => {
         if (financingError) throw financingError;
       }
       
-      toast.success('Plan Created', 'Recharge plan and financing option created successfully');
+      success('Plan Created', 'Recharge plan and financing option created successfully');
       
       // Reset form
       setName('');
@@ -152,7 +152,7 @@ const CreatePlanForm = () => {
       setEmiCount('2');
     } catch (error: any) {
       console.error('Error creating plan:', error);
-      toast.error('Failed to create plan', error.message);
+      error('Failed to create plan', error.message);
     } finally {
       setCreating(false);
     }

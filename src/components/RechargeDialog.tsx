@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -8,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Wallet, CreditCard, AlertCircle, Calendar, Clock } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
+import { useToastHelper } from "@/lib/toast-helpers";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import FinancingSummary from './FinancingSummary';
@@ -36,7 +35,7 @@ interface RechargeDialogProps {
 
 const RechargeDialog = ({ isOpen, onClose, plan, operator }: RechargeDialogProps) => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { success, error } = useToastHelper();
   
   const [useWallet, setUseWallet] = useState(true);
   const [walletBalance, setWalletBalance] = useState(0);
@@ -88,7 +87,7 @@ const RechargeDialog = ({ isOpen, onClose, plan, operator }: RechargeDialogProps
       }
     } catch (error: any) {
       console.error('Error fetching wallet data:', error);
-      toast.error('Failed to load wallet data', error.message);
+      error('Failed to load wallet data', error.message);
     } finally {
       setLoading(false);
     }
@@ -168,7 +167,7 @@ const RechargeDialog = ({ isOpen, onClose, plan, operator }: RechargeDialogProps
     if (!plan || !user || !operator) return;
     
     if (!phoneNumber || phoneNumber.length < 10) {
-      toast.error('Invalid Phone Number', 'Please enter a valid phone number');
+      error('Invalid Phone Number', 'Please enter a valid phone number');
       return;
     }
     
@@ -196,14 +195,14 @@ const RechargeDialog = ({ isOpen, onClose, plan, operator }: RechargeDialogProps
       if (error) throw error;
       
       // Show success toast
-      toast.success(
+      success(
         "Recharge Successful!",
         `${plan.name} by ${operator.name} has been activated on ${phoneNumber}`
       );
       
       // Show cashback toast if applicable
       if (isFinancing && cashbackAmount > 0) {
-        toast.success(
+        success(
           "Cashback Credited!",
           `₹${cashbackAmount} has been added to your NBFC Wallet`
         );
@@ -212,7 +211,7 @@ const RechargeDialog = ({ isOpen, onClose, plan, operator }: RechargeDialogProps
       onClose();
     } catch (error: any) {
       console.error('Error processing payment:', error);
-      toast.error("Payment Failed", error.message);
+      error("Payment Failed", error.message);
     } finally {
       setProcessingPayment(false);
     }

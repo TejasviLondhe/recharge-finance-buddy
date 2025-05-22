@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Wallet as WalletIcon, CreditCard, ArrowDown, ArrowUp, HistoryIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useToastHelper } from "@/lib/toast-helpers";
 import { formatCurrency } from "@/lib/utils";
 import { format } from 'date-fns';
 import { Transaction } from '@/types';
@@ -17,7 +16,7 @@ import EMITracker from '@/components/EMITracker';
 
 const WalletPage = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { success, error } = useToastHelper();
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -73,7 +72,7 @@ const WalletPage = () => {
       }
     } catch (error: any) {
       console.error('Error fetching wallet data:', error);
-      toast.error('Failed to load wallet data', error.message);
+      error('Failed to load wallet data', error.message);
     } finally {
       setLoading(false);
     }
@@ -98,7 +97,7 @@ const WalletPage = () => {
       }
     } catch (error: any) {
       console.error('Error fetching transactions:', error);
-      toast.error('Failed to load transactions', error.message);
+      error('Failed to load transactions', error.message);
     }
   };
   
@@ -121,13 +120,13 @@ const WalletPage = () => {
       
       setUseWalletForRecharge(!useWalletForRecharge);
       
-      toast.success(
+      success(
         'Wallet Setting Updated', 
         `Wallet will ${!useWalletForRecharge ? 'now' : 'no longer'} be used for recharges`
       );
     } catch (error: any) {
       console.error('Error updating wallet settings:', error);
-      toast.error('Failed to update settings', error.message);
+      error('Failed to update settings', error.message);
     } finally {
       setLoading(false);
     }

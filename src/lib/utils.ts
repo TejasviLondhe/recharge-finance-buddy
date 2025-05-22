@@ -6,11 +6,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function getTheme(): string {
-  return localStorage.getItem("theme") || "dark";
+export function getTheme(): 'light' | 'dark' {
+  return (localStorage.getItem("theme") as 'light' | 'dark') || "dark";
 }
 
-export function toggleTheme(theme?: string): void {
+export function toggleTheme(theme?: 'light' | 'dark'): void {
   const currentTheme = theme || getTheme();
   const newTheme = currentTheme === "light" ? "dark" : "light";
   
