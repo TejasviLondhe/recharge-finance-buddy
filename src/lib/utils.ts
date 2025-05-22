@@ -1,41 +1,31 @@
 
-import { type ClassValue, clsx } from "clsx"
+import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
- 
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function getTheme(): 'light' | 'dark' {
-  const storedTheme = localStorage.getItem("theme") as 'light' | 'dark';
-  return storedTheme || "dark";
-}
-
-export function toggleTheme(theme?: 'light' | 'dark' | (() => 'light' | 'dark')): void {
-  // Handle theme as a function
-  if (typeof theme === 'function') {
-    const resolvedTheme = theme();
-    const newTheme = resolvedTheme === "light" ? "dark" : "light";
-    
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.remove(resolvedTheme);
-    document.documentElement.classList.add(newTheme);
-    return;
+// Function to toggle theme between light and dark
+export function toggleTheme(theme: 'light' | 'dark') {
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
   }
   
-  // Handle theme as a string or undefined
-  const currentTheme = theme || getTheme();
-  const newTheme = currentTheme === "light" ? "dark" : "light";
-  
-  localStorage.setItem("theme", newTheme);
-  document.documentElement.classList.remove(currentTheme);
-  document.documentElement.classList.add(newTheme);
+  localStorage.setItem('theme', theme)
 }
 
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(amount);
+// Function to get theme from localStorage or system preference
+export function getTheme(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'light'
+  
+  const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
+  
+  if (storedTheme) {
+    return storedTheme
+  }
+  
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }

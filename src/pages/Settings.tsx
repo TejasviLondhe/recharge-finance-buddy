@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Moon, Sun, Bell, Globe, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -7,16 +6,17 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToastHelper } from "@/lib/toast-helpers";
+import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getTheme, toggleTheme } from '@/lib/utils';
-
 const Settings = () => {
   const navigate = useNavigate();
-  const { toast } = useToastHelper();
+  const {
+    toast
+  } = useToast();
 
-  // Theme settings - fix the type to be strictly 'light' | 'dark'
-  const [theme, setTheme] = useState<'light' | 'dark'>(getTheme() as 'light' | 'dark');
+  // Theme settings
+  const [theme, setTheme] = useState<'light' | 'dark'>(getTheme());
   const [showThemeDialog, setShowThemeDialog] = useState(false);
   const [pendingTheme, setPendingTheme] = useState<'light' | 'dark'>('light');
 
@@ -207,5 +207,4 @@ const Settings = () => {
       </div>
     </div>;
 };
-
 export default Settings;

@@ -11,28 +11,10 @@ import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import SplashScreen from "./pages/SplashScreen";
 import Wallet from "./pages/Wallet";
-import Plans from "./pages/Plans";
 import { AuthProvider } from "./contexts/AuthContext";
-import BottomNav from "./components/BottomNav";
-import { useLocation } from "react-router-dom";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
-
-// Layout component to handle the bottom navigation
-const Layout = ({ children }) => {
-  const location = useLocation();
-  const shouldShowBottomNav = !['/auth', '/onboarding', '/'].includes(location.pathname);
-  
-  return (
-    <>
-      {children}
-      {shouldShowBottomNav && <BottomNav />}
-      {/* Add padding to prevent content from being hidden behind bottom nav */}
-      {shouldShowBottomNav && <div className="pb-16"></div>}
-    </>
-  );
-};
 
 const App = () => {
   return (
@@ -46,38 +28,9 @@ const App = () => {
               <Route path="/" element={<SplashScreen />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/auth" element={<Auth />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <Layout>
-                    <Settings />
-                  </Layout>
-                }
-              />
-              <Route
-                path="/wallet"
-                element={
-                  <Layout>
-                    <Wallet />
-                  </Layout>
-                }
-              />
-              <Route
-                path="/plans"
-                element={
-                  <Layout>
-                    <Plans />
-                  </Layout>
-                }
-              />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/wallet" element={<Wallet />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
