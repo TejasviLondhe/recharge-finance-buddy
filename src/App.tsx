@@ -22,8 +22,6 @@ const App = () => {
       <TooltipProvider>
         <AuthProvider>
           <BrowserRouter>
-            <Toaster />
-            <Sonner />
             <Routes>
               <Route path="/" element={<SplashScreen />} />
               <Route path="/onboarding" element={<Onboarding />} />
@@ -34,6 +32,8 @@ const App = () => {
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <Toaster />
+            <Sonner />
           </BrowserRouter>
         </AuthProvider>
       </TooltipProvider>
