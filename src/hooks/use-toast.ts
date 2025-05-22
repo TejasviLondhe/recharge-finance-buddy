@@ -1,15 +1,5 @@
-
 import * as React from "react"
-import {
-  Toast,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastTitle,
-  ToastViewport,
-  type ToastProps,
-  type ToastActionElement,
-} from "@/components/ui/toast"
+import { type ToastActionElement, type ToastProps } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 5
 const TOAST_REMOVE_DELAY = 1000000
@@ -48,11 +38,11 @@ type Action =
     }
   | {
       type: ActionType["DISMISS_TOAST"]
-      toastId?: string
+      toastId?: ToasterToast["id"]
     }
   | {
       type: ActionType["REMOVE_TOAST"]
-      toastId?: string
+      toastId?: ToasterToast["id"]
     }
 
 interface State {
@@ -106,6 +96,7 @@ const reducer = (state: State, action: Action): State => {
         ),
       }
     }
+
     case actionTypes.REMOVE_TOAST:
       if (action.toastId === undefined) {
         return {
@@ -131,8 +122,38 @@ function dispatch(action: Action) {
   })
 }
 
-// Create a proper hook
-export function useToast() {
+type Toast = Omit<ToasterToast, "id">
+
+function toast({ ...props }: Toast) {
+  const id = genId()
+
+  const update = (props: ToasterToast) =>
+    dispatch({
+      type: actionTypes.UPDATE_TOAST,
+      toast: { ...props, id },
+    })
+  const dismiss = () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
+
+  dispatch({
+    type: actionTypes.ADD_TOAST,
+    toast: {
+      ...props,
+      id,
+      open: true,
+      onOpenChange: (open) => {
+        if (!open) dismiss()
+      },
+    },
+  })
+
+  return {
+    id: id,
+    dismiss,
+    update,
+  }
+}
+
+function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
   React.useEffect(() => {
@@ -147,147 +168,9 @@ export function useToast() {
 
   return {
     ...state,
-    toast: (props: Omit<ToasterToast, "id">) => {
-      const id = genId()
-
-      const update = (props: ToasterToast) =>
-        dispatch({
-          type: actionTypes.UPDATE_TOAST,
-          toast: { ...props, id },
-        })
-      const dismiss = () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
-
-      dispatch({
-        type: actionTypes.ADD_TOAST,
-        toast: {
-          ...props,
-          id,
-          open: true,
-          onOpenChange: (open) => {
-            if (!open) dismiss()
-          },
-        },
-      })
-
-      return {
-        id,
-        dismiss,
-        update,
-      }
-    },
+    toast,
     dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
-    dismissAll: () => dispatch({ type: actionTypes.DISMISS_TOAST }),
   }
 }
 
-// Define the type for our toast functions
-interface ToastFunction {
-  (props: Omit<ToasterToast, "id">): { 
-    id: string; 
-    dismiss: () => void; 
-    update: (props: ToasterToast) => void;
-  };
-}
-
-// Export a properly typed toast object
-const toast = {
-  // Base toast function
-  toast: ((props: Omit<ToasterToast, "id">) => {
-    const id = genId()
-    
-    dispatch({
-      type: actionTypes.ADD_TOAST,
-      toast: {
-        ...props,
-        id,
-        open: true,
-        onOpenChange: (open) => {
-          if (!open) dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
-        },
-      },
-    })
-    
-    return {
-      id,
-      dismiss: () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id }),
-      update: (props: ToasterToast) =>
-        dispatch({
-          type: actionTypes.UPDATE_TOAST,
-          toast: { ...props, id },
-        }),
-    }
-  }) as ToastFunction,
-  
-  // Success toast variant
-  success: ((title: string, description?: string) => {
-    const id = genId()
-    
-    dispatch({
-      type: actionTypes.ADD_TOAST,
-      toast: {
-        variant: "default",
-        title,
-        description,
-        className: "bg-green-500 text-white border-green-600",
-        id,
-        open: true,
-        onOpenChange: (open) => {
-          if (!open) dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
-        },
-      },
-    })
-    
-    return {
-      id,
-      dismiss: () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id }),
-      update: (props: ToasterToast) =>
-        dispatch({
-          type: actionTypes.UPDATE_TOAST,
-          toast: { ...props, id },
-        }),
-    }
-  }) as (title: string, description?: string) => { 
-    id: string; 
-    dismiss: () => void; 
-    update: (props: ToasterToast) => void;
-  },
-  
-  // Error toast variant
-  error: ((title: string, description?: string) => {
-    const id = genId()
-    
-    dispatch({
-      type: actionTypes.ADD_TOAST,
-      toast: {
-        variant: "destructive",
-        title,
-        description,
-        id,
-        open: true,
-        onOpenChange: (open) => {
-          if (!open) dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
-        },
-      },
-    })
-    
-    return {
-      id,
-      dismiss: () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id }),
-      update: (props: ToasterToast) =>
-        dispatch({
-          type: actionTypes.UPDATE_TOAST,
-          toast: { ...props, id },
-        }),
-    }
-  }) as (title: string, description?: string) => { 
-    id: string; 
-    dismiss: () => void; 
-    update: (props: ToasterToast) => void;
-  },
-  
-  // Add these methods to properly expose them
-  dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
-  dismissAll: () => dispatch({ type: actionTypes.DISMISS_TOAST }),
-}
-
-export { toast }
+export { useToast, toast }

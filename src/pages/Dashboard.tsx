@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -9,6 +8,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import RechargeDialog from "@/components/RechargeDialog";
+import { BottomNavigation } from "@/components/BottomNavigation";
 
 // Sample plan type
 interface Plan {
@@ -199,12 +199,14 @@ const Dashboard = () => {
         <section className="mb-8">
           <h3 className="font-semibold dark:text-white mb-4">Quick Actions</h3>
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm flex flex-col items-center">
-              <div className="bg-emerald-100 dark:bg-emerald-900/30 p-3 rounded-full mb-2">
-                <Phone className="h-6 w-6 text-emerald-500" />
+            <Link to="/plans" className="block">
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm flex flex-col items-center">
+                <div className="bg-emerald-100 dark:bg-emerald-900/30 p-3 rounded-full mb-2">
+                  <Phone className="h-6 w-6 text-emerald-500" />
+                </div>
+                <span className="text-sm text-gray-700 dark:text-gray-300">Recharge</span>
               </div>
-              <span className="text-sm text-gray-700 dark:text-gray-300">Recharge</span>
-            </div>
+            </Link>
             <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm flex flex-col items-center">
               <div className="bg-emerald-100 dark:bg-emerald-900/30 p-3 rounded-full mb-2">
                 <CreditCard className="h-6 w-6 text-emerald-500" />
@@ -265,9 +267,11 @@ const Dashboard = () => {
         <section>
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold dark:text-white">Special Offers</h3>
-            <Button variant="ghost" className="text-emerald-600 dark:text-emerald-500 p-0 h-auto">
-              View all <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
+            <Link to="/plans">
+              <Button variant="ghost" className="text-emerald-600 dark:text-emerald-500 p-0 h-auto">
+                View all <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </Link>
           </div>
           
           <div className="overflow-x-auto -mx-4 px-4">
@@ -304,26 +308,7 @@ const Dashboard = () => {
       </main>
       
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 py-2 px-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex justify-around items-center">
-          <div className="flex flex-col items-center p-2 text-emerald-500">
-            <Home size={20} />
-            <span className="text-xs mt-1">Home</span>
-          </div>
-          <Link to="/wallet" className="flex flex-col items-center p-2 text-gray-500 dark:text-gray-400">
-            <Wallet size={20} />
-            <span className="text-xs mt-1">Wallet</span>
-          </Link>
-          <div className="flex flex-col items-center p-2 text-gray-500 dark:text-gray-400">
-            <CreditCard size={20} />
-            <span className="text-xs mt-1">Plans</span>
-          </div>
-          <Link to="/settings" className="flex flex-col items-center p-2 text-gray-500 dark:text-gray-400">
-            <Settings size={20} />
-            <span className="text-xs mt-1">Settings</span>
-          </Link>
-        </div>
-      </nav>
+      <BottomNavigation />
       
       {/* Profile Edit Sheet */}
       <ProfileEditSheet isOpen={profileSheetOpen} onClose={() => setProfileSheetOpen(false)} />
