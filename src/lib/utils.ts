@@ -11,7 +11,19 @@ export function getTheme(): 'light' | 'dark' {
   return storedTheme || "dark";
 }
 
-export function toggleTheme(theme?: 'light' | 'dark'): void {
+export function toggleTheme(theme?: 'light' | 'dark' | (() => 'light' | 'dark')): void {
+  // Handle theme as a function
+  if (typeof theme === 'function') {
+    const resolvedTheme = theme();
+    const newTheme = resolvedTheme === "light" ? "dark" : "light";
+    
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.classList.remove(resolvedTheme);
+    document.documentElement.classList.add(newTheme);
+    return;
+  }
+  
+  // Handle theme as a string or undefined
   const currentTheme = theme || getTheme();
   const newTheme = currentTheme === "light" ? "dark" : "light";
   
