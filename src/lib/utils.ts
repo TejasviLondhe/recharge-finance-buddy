@@ -7,7 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getTheme(): 'light' | 'dark' {
-  return (localStorage.getItem("theme") as 'light' | 'dark') || "dark";
+  const storedTheme = localStorage.getItem("theme") as 'light' | 'dark';
+  return storedTheme || "dark";
 }
 
 export function toggleTheme(theme?: 'light' | 'dark'): void {

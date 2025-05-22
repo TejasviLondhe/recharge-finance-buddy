@@ -13,11 +13,19 @@ interface EMITrackerProps {
   showAllEMIs?: boolean;
 }
 
+// Extend the EMITransaction type to include the user_recharges property
+interface ExtendedEMITransaction extends EMITransaction {
+  user_recharges?: {
+    plan_id: string;
+    phone_number: string;
+  };
+}
+
 const EMITracker = ({ showAllEMIs = false }: EMITrackerProps) => {
   const { user } = useAuth();
   const { success, error } = useToastHelper();
   const [loading, setLoading] = useState(false);
-  const [emiTransactions, setEmiTransactions] = useState<EMITransaction[]>([]);
+  const [emiTransactions, setEmiTransactions] = useState<ExtendedEMITransaction[]>([]);
   const [plans, setPlans] = useState<Record<string, RechargePlan>>({});
   
   useEffect(() => {
@@ -60,26 +68,28 @@ const EMITracker = ({ showAllEMIs = false }: EMITrackerProps) => {
       if (error) throw error;
       
       if (emiData && emiData.length > 0) {
-        setEmiTransactions(emiData as unknown as EMITransaction[]);
+        setEmiTransactions(emiData as unknown as ExtendedEMITransaction[]);
         
         // Get all plan ids
-        const planIds = [...new Set(emiData.map(emi => emi.user_recharges.plan_id))];
+        const planIds = [...new Set(emiData.map(emi => emi.user_recharges?.plan_id))].filter(Boolean);
         
-        // Fetch plans data
-        const { data: plansData, error: plansError } = await supabase
-          .from('recharge_plans')
-          .select('*')
-          .in('id', planIds);
+        if (planIds.length > 0) {
+          // Fetch plans data
+          const { data: plansData, error: plansError } = await supabase
+            .from('recharge_plans')
+            .select('*')
+            .in('id', planIds);
+            
+          if (plansError) throw plansError;
           
-        if (plansError) throw plansError;
-        
-        // Create plans lookup map
-        const plansMap: Record<string, RechargePlan> = {};
-        plansData?.forEach(plan => {
-          plansMap[plan.id] = plan;
-        });
-        
-        setPlans(plansMap);
+          // Create plans lookup map
+          const plansMap: Record<string, RechargePlan> = {};
+          plansData?.forEach(plan => {
+            plansMap[plan.id] = plan;
+          });
+          
+          setPlans(plansMap);
+        }
       } else {
         setEmiTransactions([]);
       }
@@ -191,7 +201,7 @@ const EMITracker = ({ showAllEMIs = false }: EMITrackerProps) => {
       </CardHeader>
       <CardContent className="space-y-4">
         {emiTransactions.map((emi) => {
-          const plan = plans[emi.user_recharges?.plan_id];
+          const plan = emi.user_recharges?.plan_id ? plans[emi.user_recharges.plan_id] : undefined;
           return (
             <div 
               key={emi.id} 
@@ -205,9 +215,11 @@ const EMITracker = ({ showAllEMIs = false }: EMITrackerProps) => {
                       {plan?.name || 'Recharge Plan'} - EMI {emi.emi_number}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Phone number: {emi.user_recharges?.phone_number}
-                  </p>
+                  {emi.user_recharges?.phone_number && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      Phone number: {emi.user_recharges.phone_number}
+                    </p>
+                  )}
                 </div>
                 <div className="text-right">
                   <span className="text-lg font-bold">

@@ -1,0 +1,169 @@
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { useToastHelper } from "@/lib/toast-helpers";
+import { RechargePlan, TelecomOperator } from "@/types";
+import PlanCard from "@/components/PlanCard";
+import RechargeDialog from "@/components/RechargeDialog";
+
+const Plans = () => {
+  const { error } = useToastHelper();
+  const [loading, setLoading] = useState(true);
+  const [operators, setOperators] = useState<TelecomOperator[]>([]);
+  const [plans, setPlans] = useState<Record<string, RechargePlan[]>>({});
+  const [selectedOperator, setSelectedOperator] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<RechargePlan | null>(null);
+  const [selectedOperatorObj, setSelectedOperatorObj] = useState<TelecomOperator | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    fetchOperators();
+    fetchPlans();
+  }, []);
+  
+  useEffect(() => {
+    if (operators.length > 0 && !selectedOperator) {
+      setSelectedOperator(operators[0].id);
+      setSelectedOperatorObj(operators[0]);
+    }
+  }, [operators]);
+
+  const fetchOperators = async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('telecom_operators')
+        .select('*')
+        .order('name');
+        
+      if (error) throw error;
+      
+      if (data) {
+        setOperators(data);
+      }
+    } catch (error: any) {
+      console.error('Error fetching operators:', error);
+      error('Failed to load operators', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPlans = async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('recharge_plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('amount');
+        
+      if (error) throw error;
+      
+      if (data) {
+        // Group plans by operator
+        const plansByOperator: Record<string, RechargePlan[]> = {};
+        
+        data.forEach(plan => {
+          if (!plansByOperator[plan.operator_id]) {
+            plansByOperator[plan.operator_id] = [];
+          }
+          plansByOperator[plan.operator_id].push(plan);
+        });
+        
+        setPlans(plansByOperator);
+      }
+    } catch (error: any) {
+      console.error('Error fetching plans:', error);
+      error('Failed to load recharge plans', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePlanSelect = (plan: RechargePlan) => {
+    setSelectedPlan(plan);
+    setIsDialogOpen(true);
+  };
+
+  const handleOperatorChange = (operatorId: string) => {
+    setSelectedOperator(operatorId);
+    const foundOperator = operators.find(op => op.id === operatorId);
+    setSelectedOperatorObj(foundOperator || null);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedPlan(null);
+  };
+
+  return (
+    <div className="container max-w-5xl py-6 px-4">
+      <h1 className="text-2xl font-bold text-white mb-6">Telecom Plans</h1>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>All Recharge Plans</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading && operators.length === 0 ? (
+            <p className="text-center py-8">Loading operators and plans...</p>
+          ) : (
+            <>
+              <Tabs 
+                value={selectedOperator || ''} 
+                onValueChange={handleOperatorChange}
+                className="w-full"
+              >
+                <TabsList className="mb-4 w-full justify-start overflow-auto">
+                  {operators.map(operator => (
+                    <TabsTrigger key={operator.id} value={operator.id}>
+                      {operator.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                
+                {selectedOperator && (
+                  <TabsContent value={selectedOperator} className="mt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {plans[selectedOperator]?.length > 0 ? (
+                        plans[selectedOperator].map(plan => (
+                          <PlanCard 
+                            key={plan.id}
+                            plan={plan}
+                            operator={operators.find(op => op.id === plan.operator_id) as TelecomOperator}
+                            onSelect={handlePlanSelect}
+                            isMonthly={true}
+                          />
+                        ))
+                      ) : (
+                        <p className="col-span-full text-center py-8 text-gray-500">
+                          No plans available for this operator
+                        </p>
+                      )}
+                    </div>
+                  </TabsContent>
+                )}
+              </Tabs>
+              
+              {selectedPlan && selectedOperatorObj && (
+                <RechargeDialog
+                  isOpen={isDialogOpen}
+                  onClose={handleCloseDialog}
+                  plan={selectedPlan}
+                  operator={selectedOperatorObj}
+                />
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default Plans;

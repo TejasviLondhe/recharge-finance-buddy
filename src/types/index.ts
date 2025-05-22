@@ -1,3 +1,4 @@
+
 export interface TelecomOperator {
   id: string;
   name: string;
