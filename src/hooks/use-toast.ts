@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { type ToastActionElement, type ToastProps } from "@/components/ui/toast"
 
@@ -124,6 +125,7 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
+// Basic toast function
 function toast({ ...props }: Toast) {
   const id = genId()
 
@@ -151,6 +153,40 @@ function toast({ ...props }: Toast) {
     dismiss,
     update,
   }
+}
+
+// Add variant methods to toast
+toast.success = (message: string) => {
+  return toast({
+    title: "Success",
+    description: message,
+    variant: "default",
+    className: "bg-green-50 text-green-900 border-green-200 dark:bg-green-900 dark:text-green-100 dark:border-green-800",
+  })
+}
+
+toast.error = (message: string) => {
+  return toast({
+    title: "Error",
+    description: message,
+    variant: "destructive",
+  })
+}
+
+toast.warning = (message: string) => {
+  return toast({
+    title: "Warning",
+    description: message,
+    className: "bg-yellow-50 text-yellow-900 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-100 dark:border-yellow-800",
+  })
+}
+
+toast.info = (message: string) => {
+  return toast({
+    title: "Info",
+    description: message,
+    className: "bg-blue-50 text-blue-900 border-blue-200 dark:bg-blue-900 dark:text-blue-100 dark:border-blue-800",
+  })
 }
 
 function useToast() {
