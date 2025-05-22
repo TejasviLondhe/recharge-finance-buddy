@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { RechargePlan, TelecomOperator } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { Calendar, Clock, MessageSquare, Wifi } from "lucide-react";
