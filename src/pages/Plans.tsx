@@ -97,13 +97,13 @@ const Plans = () => {
 
   // Sample plan generator (replace with API data in production)
   const generateSamplePlans = (provider: string, isThreeMonth: boolean): Plan[] => {
-    // Fixed the logic issue here - now correctly returns three-month plans when isThreeMonth is true
     if (isThreeMonth) {
+      // When toggle is ON (3-Month Plans), return plans with 84 days validity
       return [
         {
           id: `${provider.toLowerCase()}-3month-1`,
           provider: provider,
-          name: `${provider} 3-Month Special`,
+          name: `${provider} 3-Month Basic`,
           amount: provider === "Jio" ? 900 : provider === "Airtel" ? 845 : 749,
           isThreeMonth: true,
           data: provider === "Jio" ? "2GB/day" : provider === "Airtel" ? "1.5GB/day" : "1.5GB/day",
@@ -113,6 +113,17 @@ const Plans = () => {
         },
         {
           id: `${provider.toLowerCase()}-3month-2`,
+          provider: provider,
+          name: `${provider} 3-Month Standard`,
+          amount: provider === "Jio" ? 1099 : provider === "Airtel" ? 1045 : 949,
+          isThreeMonth: true,
+          data: provider === "Jio" ? "2.5GB/day" : provider === "Airtel" ? "2GB/day" : "2GB/day",
+          calls: "Unlimited",
+          sms: "100/day",
+          validity: "84 days",
+        },
+        {
+          id: `${provider.toLowerCase()}-3month-3`,
           provider: provider,
           name: `${provider} 3-Month Ultimate`,
           amount: provider === "Jio" ? 1299 : provider === "Airtel" ? 1199 : 1099,
@@ -124,6 +135,7 @@ const Plans = () => {
         },
       ];
     } else {
+      // When toggle is OFF (Monthly Plans), return plans with 28 days validity
       return [
         {
           id: `${provider.toLowerCase()}-monthly-1`,
