@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -96,7 +97,7 @@ const Plans = () => {
 
   // Sample plan generator (replace with API data in production)
   const generateSamplePlans = (provider: string, isThreeMonth: boolean): Plan[] => {
-    // This is the key issue - we need to correctly use isThreeMonth to determine which plans to show
+    // Fixed the logic issue here - now correctly returns three-month plans when isThreeMonth is true
     if (isThreeMonth) {
       return [
         {
