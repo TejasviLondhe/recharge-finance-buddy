@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plan } from "@/pages/Plans";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Play } from "lucide-react";
 
 interface PlanCardProps {
   plan: Plan;
@@ -74,16 +74,36 @@ const PlanCard = ({ plan, onSelect }: PlanCardProps) => {
         </div>
 
         <div className="flex flex-wrap gap-2 mb-3">
-          <div className={`text-xs px-2 py-1 rounded-full ${colors.bg} border ${colors.border} ${colors.highlight}`}>
+          <div className={`text-xs px-2 py-1 rounded-full bg-white dark:bg-gray-700 border ${colors.border} ${colors.highlight}`}>
             {plan.data}
           </div>
-          <div className={`text-xs px-2 py-1 rounded-full ${colors.bg} border ${colors.border} ${colors.highlight}`}>
+          <div className={`text-xs px-2 py-1 rounded-full bg-white dark:bg-gray-700 border ${colors.border} ${colors.highlight}`}>
             {plan.calls} calls
           </div>
-          <div className={`text-xs px-2 py-1 rounded-full ${colors.bg} border ${colors.border} ${colors.highlight}`}>
+          <div className={`text-xs px-2 py-1 rounded-full bg-white dark:bg-gray-700 border ${colors.border} ${colors.highlight}`}>
             {plan.sms}
           </div>
         </div>
+
+        {/* OTT Subscriptions */}
+        {plan.ottSubscriptions && plan.ottSubscriptions.length > 0 && (
+          <div className="mb-3">
+            <div className="flex items-center mb-2">
+              <Play className={`h-3 w-3 ${colors.highlight} mr-1`} />
+              <span className="text-xs font-medium dark:text-gray-200">OTT Included:</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {plan.ottSubscriptions.map((ott, index) => (
+                <span
+                  key={index}
+                  className={`text-xs px-2 py-1 rounded-full bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 border border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400`}
+                >
+                  {ott}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {plan.isThreeMonth && (
           <div className={`mb-3 p-2 rounded-md bg-opacity-50 flex items-start ${colors.bg} border ${colors.border}`}>

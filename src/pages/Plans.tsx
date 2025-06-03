@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-// Plan type definition
+// Enhanced Plan type definition with OTT subscriptions
 export interface Plan {
   id: string;
   name: string;
@@ -24,6 +25,7 @@ export interface Plan {
   calls: string;
   sms: string;
   validity: string;
+  ottSubscriptions?: string[];
 }
 
 const Plans = () => {
@@ -69,9 +71,9 @@ const Plans = () => {
 
     try {
       // Use the current state value directly in plan generation
-      const jioPlans = generateSamplePlans("Jio", showThreeMonth);
-      const airtelPlans = generateSamplePlans("Airtel", showThreeMonth);
-      const viPlans = generateSamplePlans("Vi", showThreeMonth);
+      const jioPlans = getRealPlans("Jio", showThreeMonth);
+      const airtelPlans = getRealPlans("Airtel", showThreeMonth);
+      const viPlans = getRealPlans("Vi", showThreeMonth);
 
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 700));
@@ -98,84 +100,298 @@ const Plans = () => {
     }
   };
 
-  // Sample plan generator (replace with API data in production)
-  const generateSamplePlans = (provider: string, isThreeMonth: boolean): Plan[] => {
+  // Real prepaid plans data based on current market offerings
+  const getRealPlans = (provider: string, isThreeMonth: boolean): Plan[] => {
     console.log(`Generating plans for ${provider}, isThreeMonth: ${isThreeMonth}`);
     
     if (isThreeMonth) {
-      // When toggle is ON (3-Month Plans), return plans with 84 days validity
-      return [
-        {
-          id: `${provider.toLowerCase()}-3month-1`,
-          provider: provider,
-          name: `${provider} 3-Month Basic`,
-          amount: provider === "Jio" ? 900 : provider === "Airtel" ? 845 : 749,
-          isThreeMonth: true,
-          data: provider === "Jio" ? "2GB/day" : provider === "Airtel" ? "1.5GB/day" : "1.5GB/day",
-          calls: "Unlimited",
-          sms: "100/day",
-          validity: "84 days",
-        },
-        {
-          id: `${provider.toLowerCase()}-3month-2`,
-          provider: provider,
-          name: `${provider} 3-Month Standard`,
-          amount: provider === "Jio" ? 1099 : provider === "Airtel" ? 1045 : 949,
-          isThreeMonth: true,
-          data: provider === "Jio" ? "2.5GB/day" : provider === "Airtel" ? "2GB/day" : "2GB/day",
-          calls: "Unlimited",
-          sms: "100/day",
-          validity: "84 days",
-        },
-        {
-          id: `${provider.toLowerCase()}-3month-3`,
-          provider: provider,
-          name: `${provider} 3-Month Ultimate`,
-          amount: provider === "Jio" ? 1299 : provider === "Airtel" ? 1199 : 1099,
-          isThreeMonth: true,
-          data: provider === "Jio" ? "3GB/day" : provider === "Airtel" ? "2.5GB/day" : "2GB/day",
-          calls: "Unlimited",
-          sms: "100/day",
-          validity: "84 days",
-        },
-      ];
+      // 84-day (3-Month) plans
+      switch (provider) {
+        case "Jio":
+          return [
+            {
+              id: "jio-84-719",
+              provider: "Jio",
+              name: "Jio 3-Month Basic",
+              amount: 719,
+              isThreeMonth: true,
+              data: "1.5GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "84 days",
+              ottSubscriptions: ["JioCinema Premium", "JioSaavn Pro"]
+            },
+            {
+              id: "jio-84-859",
+              provider: "Jio",
+              name: "Jio 3-Month Standard",
+              amount: 859,
+              isThreeMonth: true,
+              data: "2GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "84 days",
+              ottSubscriptions: ["JioCinema Premium", "JioSaavn Pro", "JioNews"]
+            },
+            {
+              id: "jio-84-1028",
+              provider: "Jio",
+              name: "Jio 3-Month Premium",
+              amount: 1028,
+              isThreeMonth: true,
+              data: "2.5GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "84 days",
+              ottSubscriptions: ["JioCinema Premium", "JioSaavn Pro", "JioNews", "Sony LIV"]
+            }
+          ];
+        
+        case "Airtel":
+          return [
+            {
+              id: "airtel-84-839",
+              provider: "Airtel",
+              name: "Airtel 3-Month Smart",
+              amount: 839,
+              isThreeMonth: true,
+              data: "2GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "84 days",
+              ottSubscriptions: ["Disney+ Hotstar Mobile", "Airtel Xstream"]
+            },
+            {
+              id: "airtel-84-999",
+              provider: "Airtel",
+              name: "Airtel 3-Month Entertainment",
+              amount: 999,
+              isThreeMonth: true,
+              data: "2.5GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "84 days",
+              ottSubscriptions: ["Disney+ Hotstar Mobile", "Amazon Prime Video Mobile", "Airtel Xstream"]
+            },
+            {
+              id: "airtel-84-1199",
+              provider: "Airtel",
+              name: "Airtel 3-Month Ultimate",
+              amount: 1199,
+              isThreeMonth: true,
+              data: "3GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "84 days",
+              ottSubscriptions: ["Disney+ Hotstar Mobile", "Amazon Prime Video Mobile", "Netflix Mobile", "Airtel Xstream"]
+            }
+          ];
+        
+        case "Vi":
+          return [
+            {
+              id: "vi-84-719",
+              provider: "Vi",
+              name: "Vi 3-Month Hero",
+              amount: 719,
+              isThreeMonth: true,
+              data: "1.5GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "84 days",
+              ottSubscriptions: ["Vi Movies & TV"]
+            },
+            {
+              id: "vi-84-839",
+              provider: "Vi",
+              name: "Vi 3-Month Super",
+              amount: 839,
+              isThreeMonth: true,
+              data: "2GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "84 days",
+              ottSubscriptions: ["Vi Movies & TV", "SonyLIV"]
+            },
+            {
+              id: "vi-84-999",
+              provider: "Vi",
+              name: "Vi 3-Month Champion",
+              amount: 999,
+              isThreeMonth: true,
+              data: "2.5GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "84 days",
+              ottSubscriptions: ["Vi Movies & TV", "SonyLIV", "Zee5"]
+            }
+          ];
+        
+        default:
+          return [];
+      }
     } else {
-      // When toggle is OFF (Monthly Plans), return plans with 28 days validity
-      return [
-        {
-          id: `${provider.toLowerCase()}-monthly-1`,
-          provider: provider,
-          name: `${provider} Basic`,
-          amount: provider === "Jio" ? 299 : provider === "Airtel" ? 279 : 249,
-          isThreeMonth: false,
-          data: provider === "Jio" ? "2GB/day" : provider === "Airtel" ? "1.5GB/day" : "1.5GB/day",
-          calls: "Unlimited",
-          sms: "100/day",
-          validity: "28 days",
-        },
-        {
-          id: `${provider.toLowerCase()}-monthly-2`,
-          provider: provider,
-          name: `${provider} Standard`,
-          amount: provider === "Jio" ? 349 : provider === "Airtel" ? 329 : 299,
-          isThreeMonth: false,
-          data: provider === "Jio" ? "2.5GB/day" : provider === "Airtel" ? "2GB/day" : "2GB/day",
-          calls: "Unlimited",
-          sms: "100/day",
-          validity: "28 days",
-        },
-        {
-          id: `${provider.toLowerCase()}-monthly-3`,
-          provider: provider,
-          name: `${provider} Premium`,
-          amount: provider === "Jio" ? 499 : provider === "Airtel" ? 479 : 449,
-          isThreeMonth: false,
-          data: provider === "Jio" ? "3GB/day" : provider === "Airtel" ? "2.5GB/day" : "3GB/day",
-          calls: "Unlimited",
-          sms: "100/day",
-          validity: "28 days",
-        },
-      ];
+      // 28-day (Monthly) plans
+      switch (provider) {
+        case "Jio":
+          return [
+            {
+              id: "jio-28-239",
+              provider: "Jio",
+              name: "Jio Basic",
+              amount: 239,
+              isThreeMonth: false,
+              data: "1.5GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "28 days",
+              ottSubscriptions: ["JioCinema Premium"]
+            },
+            {
+              id: "jio-28-299",
+              provider: "Jio",
+              name: "Jio Standard",
+              amount: 299,
+              isThreeMonth: false,
+              data: "2GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "28 days",
+              ottSubscriptions: ["JioCinema Premium", "JioSaavn Pro"]
+            },
+            {
+              id: "jio-28-349",
+              provider: "Jio",
+              name: "Jio Premium",
+              amount: 349,
+              isThreeMonth: false,
+              data: "2.5GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "28 days",
+              ottSubscriptions: ["JioCinema Premium", "JioSaavn Pro", "JioNews"]
+            },
+            {
+              id: "jio-28-399",
+              provider: "Jio",
+              name: "Jio Max",
+              amount: 399,
+              isThreeMonth: false,
+              data: "3GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "28 days",
+              ottSubscriptions: ["JioCinema Premium", "JioSaavn Pro", "JioNews", "Sony LIV"]
+            }
+          ];
+        
+        case "Airtel":
+          return [
+            {
+              id: "airtel-28-265",
+              provider: "Airtel",
+              name: "Airtel Smart",
+              amount: 265,
+              isThreeMonth: false,
+              data: "1.5GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "28 days",
+              ottSubscriptions: ["Airtel Xstream"]
+            },
+            {
+              id: "airtel-28-299",
+              provider: "Airtel",
+              name: "Airtel Popular",
+              amount: 299,
+              isThreeMonth: false,
+              data: "2GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "28 days",
+              ottSubscriptions: ["Disney+ Hotstar Mobile", "Airtel Xstream"]
+            },
+            {
+              id: "airtel-28-359",
+              provider: "Airtel",
+              name: "Airtel Entertainment",
+              amount: 359,
+              isThreeMonth: false,
+              data: "2.5GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "28 days",
+              ottSubscriptions: ["Disney+ Hotstar Mobile", "Amazon Prime Video Mobile", "Airtel Xstream"]
+            },
+            {
+              id: "airtel-28-449",
+              provider: "Airtel",
+              name: "Airtel Ultimate",
+              amount: 449,
+              isThreeMonth: false,
+              data: "3GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "28 days",
+              ottSubscriptions: ["Disney+ Hotstar Mobile", "Amazon Prime Video Mobile", "Netflix Mobile", "Airtel Xstream"]
+            }
+          ];
+        
+        case "Vi":
+          return [
+            {
+              id: "vi-28-249",
+              provider: "Vi",
+              name: "Vi Hero",
+              amount: 249,
+              isThreeMonth: false,
+              data: "1.5GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "28 days",
+              ottSubscriptions: ["Vi Movies & TV"]
+            },
+            {
+              id: "vi-28-299",
+              provider: "Vi",
+              name: "Vi Super",
+              amount: 299,
+              isThreeMonth: false,
+              data: "2GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "28 days",
+              ottSubscriptions: ["Vi Movies & TV", "SonyLIV"]
+            },
+            {
+              id: "vi-28-359",
+              provider: "Vi",
+              name: "Vi Champion",
+              amount: 359,
+              isThreeMonth: false,
+              data: "2.5GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "28 days",
+              ottSubscriptions: ["Vi Movies & TV", "SonyLIV", "Zee5"]
+            },
+            {
+              id: "vi-28-399",
+              provider: "Vi",
+              name: "Vi Winner",
+              amount: 399,
+              isThreeMonth: false,
+              data: "3GB/day",
+              calls: "Unlimited",
+              sms: "100/day",
+              validity: "28 days",
+              ottSubscriptions: ["Vi Movies & TV", "SonyLIV", "Zee5", "Voot Select"]
+            }
+          ];
+        
+        default:
+          return [];
+      }
     }
   };
 
@@ -279,7 +495,7 @@ const Plans = () => {
                   {loading[operator as keyof typeof loading] ? (
                     // Loading placeholder
                     <div className="space-y-4 animate-pulse">
-                      {[1, 2].map(i => (
+                      {[1, 2, 3, 4].map(i => (
                         <div key={i} className="h-40 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
                       ))}
                     </div>
