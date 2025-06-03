@@ -109,7 +109,8 @@ const Dashboard = () => {
     setRechargeDialogOpen(true);
   };
   
-  return <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 p-4 shadow-sm">
         <div className="flex justify-between items-center">
@@ -319,7 +320,8 @@ const Dashboard = () => {
         onClose={() => setRechargeDialogOpen(false)} 
         plan={selectedPlan}
       />
-    </div>;
+    </div>
+  );
 };
 
 export default Dashboard;
