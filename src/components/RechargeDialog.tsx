@@ -5,10 +5,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Wallet, CreditCard, AlertCircle } from 'lucide-react';
+import { Wallet, CreditCard, AlertCircle, Calculator } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { phonePeService } from "@/services/phonepeService";
 
 interface Plan {
   id: string;
@@ -37,6 +38,12 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
   const [finalAmount, setFinalAmount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [showEMIBreakdown, setShowEMIBreakdown] = useState(false);
+  
+  // EMI calculation constants
+  const processingFeeRate = 0.02; // 2%
+  const gstRate = 0.18; // 18%
+  const emiCount = 3;
   
   useEffect(() => {
     if (isOpen && user && plan) {
@@ -55,7 +62,6 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
     try {
       setLoading(true);
       
-      // Fetch wallet balance
       const { data: walletData, error: walletError } = await supabase
         .from('wallet_balance')
         .select('balance, use_wallet_for_recharge')
@@ -84,7 +90,6 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
   
   const fetchCashbackSettings = async () => {
     try {
-      // Fetch cashback settings for 3-month plans
       if (plan?.isThreeMonth) {
         const { data, error } = await supabase
           .from('admin_settings')
@@ -101,7 +106,6 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
       }
     } catch (error: any) {
       console.error('Error fetching cashback settings:', error);
-      // Default cashback amount if unable to fetch
       setCashbackAmount(plan?.isThreeMonth ? 50 : 0);
     }
   };
@@ -118,6 +122,25 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
     
     setFinalAmount(amount);
   };
+
+  const calculateEMIDetails = () => {
+    if (!plan) return null;
+    
+    const totalAmount = plan.amount;
+    const processingFee = totalAmount * processingFeeRate;
+    const gstOnProcessingFee = processingFee * gstRate;
+    const totalWithCharges = totalAmount + processingFee + gstOnProcessingFee;
+    const emiAmount = Math.ceil(totalWithCharges / emiCount);
+    
+    return {
+      totalAmount,
+      processingFee,
+      gstOnProcessingFee,
+      totalWithCharges,
+      emiAmount,
+      firstPayment: emiAmount
+    };
+  };
   
   const handlePayment = async () => {
     if (!plan || !user) return;
@@ -125,39 +148,63 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
     try {
       setProcessingPayment(true);
       
-      // Calculate wallet deduction
       const walletDeduction = useWallet ? Math.min(walletBalance, plan.amount) : 0;
-      const amountToPay = plan.amount - walletDeduction;
+      const amountToPay = finalAmount;
       
-      // Start a Supabase transaction using RPC (stored procedure)
-      const { data, error } = await supabase.rpc('process_recharge', {
-        p_user_id: user.id,
-        p_plan_id: plan.id,
-        p_plan_name: plan.name,
-        p_plan_amount: plan.amount,
-        p_wallet_amount: walletDeduction,
-        p_is_three_month: plan.isThreeMonth,
-        p_provider: plan.provider
-      });
-      
-      if (error) throw error;
-      
-      // Show success toast
-      toast({
-        title: "Recharge Successful!",
-        description: `${plan.name} has been activated on your number.`
-      });
-      
-      // Show cashback toast if applicable
-      if (plan.isThreeMonth && cashbackAmount > 0) {
-        toast({
-          title: "Cashback Credited!",
-          description: `₹${cashbackAmount} has been added to your NBFC Wallet.`,
-          variant: "default"
-        });
+      if (plan.isThreeMonth && showEMIBreakdown) {
+        // Handle EMI payment
+        const emiDetails = calculateEMIDetails();
+        if (!emiDetails) return;
+        
+        const { paymentUrl, transactionId } = await phonePeService.initiatePayment(
+          emiDetails.firstPayment,
+          user.id,
+          plan.id,
+          plan.name,
+          true // isRecurring
+        );
+        
+        // Setup recurring payment schedule
+        await phonePeService.setupRecurringPayment(
+          plan.id,
+          user.id,
+          emiDetails.totalWithCharges,
+          emiDetails.emiAmount,
+          emiCount
+        );
+        
+        // Redirect to PhonePe payment page
+        window.location.href = paymentUrl;
+        
+      } else {
+        // Handle regular payment
+        const { paymentUrl, transactionId } = await phonePeService.initiatePayment(
+          amountToPay,
+          user.id,
+          plan.id,
+          plan.name,
+          false
+        );
+        
+        // If using wallet, process wallet deduction first
+        if (walletDeduction > 0) {
+          const { error } = await supabase.rpc('process_recharge', {
+            p_user_id: user.id,
+            p_plan_id: plan.id,
+            p_plan_name: plan.name,
+            p_plan_amount: plan.amount,
+            p_wallet_amount: walletDeduction,
+            p_is_three_month: plan.isThreeMonth,
+            p_provider: plan.provider
+          });
+          
+          if (error) throw error;
+        }
+        
+        // Redirect to PhonePe payment page
+        window.location.href = paymentUrl;
       }
       
-      onClose();
     } catch (error: any) {
       console.error('Error processing payment:', error);
       toast({
@@ -171,6 +218,8 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
   };
   
   if (!plan) return null;
+  
+  const emiDetails = calculateEMIDetails();
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -209,6 +258,52 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
               </Label>
             </div>
           </div>
+
+          {/* EMI Option for 3-Month Plans */}
+          {plan.isThreeMonth && (
+            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800/50">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center">
+                  <Calculator className="h-5 w-5 text-blue-500 mr-2" />
+                  <span className="font-medium text-blue-600 dark:text-blue-400">EMI Option Available</span>
+                </div>
+                <Switch 
+                  id="emi-option" 
+                  checked={showEMIBreakdown}
+                  onCheckedChange={setShowEMIBreakdown}
+                />
+              </div>
+              
+              {showEMIBreakdown && emiDetails && (
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-blue-600 dark:text-blue-400">Plan Amount:</span>
+                    <span>₹{emiDetails.totalAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-blue-600 dark:text-blue-400">Processing Fee (2%):</span>
+                    <span>₹{emiDetails.processingFee.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-blue-600 dark:text-blue-400">GST (18%):</span>
+                    <span>₹{emiDetails.gstOnProcessingFee.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-medium border-t pt-2">
+                    <span className="text-blue-600 dark:text-blue-400">Total Amount:</span>
+                    <span>₹{emiDetails.totalWithCharges.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-medium">
+                    <span className="text-blue-600 dark:text-blue-400">Pay Today:</span>
+                    <span>₹{emiDetails.firstPayment.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-blue-600 dark:text-blue-400">Remaining EMIs:</span>
+                    <span>2 × ₹{emiDetails.emiAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           
           {/* Cashback Info */}
           {plan.isThreeMonth && cashbackAmount > 0 && (
@@ -225,22 +320,33 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
           
           {/* Payment Summary */}
           <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-            <div className="flex justify-between items-center mb-2">
-              <span className="dark:text-gray-300">Plan Amount:</span>
-              <span className="dark:text-white">₹ {plan.amount.toFixed(2)}</span>
-            </div>
-            
-            {useWallet && walletBalance > 0 && (
-              <div className="flex justify-between items-center mb-2 text-emerald-500">
-                <span>Wallet Deduction:</span>
-                <span>- ₹ {Math.min(walletBalance, plan.amount).toFixed(2)}</span>
-              </div>
+            {!showEMIBreakdown ? (
+              <>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="dark:text-gray-300">Plan Amount:</span>
+                  <span className="dark:text-white">₹ {plan.amount.toFixed(2)}</span>
+                </div>
+                
+                {useWallet && walletBalance > 0 && (
+                  <div className="flex justify-between items-center mb-2 text-emerald-500">
+                    <span>Wallet Deduction:</span>
+                    <span>- ₹ {Math.min(walletBalance, plan.amount).toFixed(2)}</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between items-center pt-3 border-t border-gray-100 dark:border-gray-700 font-semibold">
+                  <span className="dark:text-white">Amount to Pay:</span>
+                  <span className="dark:text-white text-lg">₹ {finalAmount.toFixed(2)}</span>
+                </div>
+              </>
+            ) : (
+              emiDetails && (
+                <div className="flex justify-between items-center font-semibold">
+                  <span className="dark:text-white">Pay Today:</span>
+                  <span className="dark:text-white text-lg">₹ {emiDetails.firstPayment.toFixed(2)}</span>
+                </div>
+              )
             )}
-            
-            <div className="flex justify-between items-center pt-3 border-t border-gray-100 dark:border-gray-700 font-semibold">
-              <span className="dark:text-white">Amount to Pay:</span>
-              <span className="dark:text-white text-lg">₹ {finalAmount.toFixed(2)}</span>
-            </div>
           </div>
         </div>
         
@@ -249,7 +355,8 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
             Cancel
           </Button>
           <Button onClick={handlePayment} disabled={processingPayment || loading}>
-            {processingPayment ? "Processing..." : "Proceed to Payment"}
+            {processingPayment ? "Processing..." : 
+             showEMIBreakdown ? "Pay with EMI" : "Pay with PhonePe"}
           </Button>
         </DialogFooter>
       </DialogContent>

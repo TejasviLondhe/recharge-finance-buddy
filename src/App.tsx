@@ -1,46 +1,45 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
+import Index from '@/pages/Index';
+import Auth from '@/pages/Auth';
+import Onboarding from '@/pages/Onboarding';
+import Dashboard from '@/pages/Dashboard';
+import Plans from '@/pages/Plans';
+import Settings from '@/pages/Settings';
+import Wallet from '@/pages/Wallet';
+import NotFound from '@/pages/NotFound';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { QueryClient } from "@/contexts/QueryContext";
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import NotFound from "./pages/NotFound";
-import Onboarding from "./pages/Onboarding";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import Settings from "./pages/Settings";
-import SplashScreen from "./pages/SplashScreen";
-import Wallet from "./pages/Wallet";
-import Plans from "./pages/Plans";
-import { AuthProvider } from "./contexts/AuthContext";
+import PaymentSuccess from '@/pages/PaymentSuccess';
 
-// Create a new QueryClient instance
-const queryClient = new QueryClient();
-
-const App = () => {
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+    <QueryClient>
+      <BrowserRouter>
         <AuthProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<SplashScreen />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/wallet" element={<Wallet />} />
-              <Route path="/plans" element={<Plans />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-            <Sonner />
-          </BrowserRouter>
+          <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+            <div className="min-h-screen bg-background font-sans antialiased">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/plans" element={<Plans />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/wallet" element={<Wallet />} />
+                <Route path="/payment-success" element={<PaymentSuccess />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+            </div>
+          </ThemeProvider>
         </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+      </BrowserRouter>
+    </QueryClient>
   );
-};
+}
 
 export default App;
