@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -56,6 +55,11 @@ const Plans = () => {
     fetchPlans();
   }, [user, navigate]);
 
+  // Add useEffect to refetch plans when showThreeMonth changes
+  useEffect(() => {
+    fetchPlans();
+  }, [showThreeMonth]);
+
   const fetchPlans = async () => {
     setLoading({
       jio: true,
@@ -64,8 +68,7 @@ const Plans = () => {
     });
 
     try {
-      // For now, using static sample data
-      // In a real app, you would fetch from Supabase or an API
+      // Use the current state value directly in plan generation
       const jioPlans = generateSamplePlans("Jio", showThreeMonth);
       const airtelPlans = generateSamplePlans("Airtel", showThreeMonth);
       const viPlans = generateSamplePlans("Vi", showThreeMonth);
@@ -97,6 +100,8 @@ const Plans = () => {
 
   // Sample plan generator (replace with API data in production)
   const generateSamplePlans = (provider: string, isThreeMonth: boolean): Plan[] => {
+    console.log(`Generating plans for ${provider}, isThreeMonth: ${isThreeMonth}`);
+    
     if (isThreeMonth) {
       // When toggle is ON (3-Month Plans), return plans with 84 days validity
       return [
@@ -180,9 +185,9 @@ const Plans = () => {
   };
 
   const handleThreeMonthToggle = (checked: boolean) => {
+    console.log(`Toggle changed to: ${checked}`);
     setShowThreeMonth(checked);
-    // Fetch plans again when toggle changes
-    setTimeout(() => fetchPlans(), 100);
+    // The useEffect will handle refetching plans automatically
   };
 
   return (
