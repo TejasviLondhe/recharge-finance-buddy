@@ -2,14 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Card } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Wallet, CreditCard, AlertCircle, Calculator } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { phonePeService } from "@/services/phonepeService";
+import WalletSection from "./recharge/WalletSection";
+import EMISection from "./recharge/EMISection";
+import CashbackInfo from "./recharge/CashbackInfo";
+import PaymentSummary from "./recharge/PaymentSummary";
 
 interface Plan {
   id: string;
@@ -267,130 +267,34 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
             <span className="font-semibold dark:text-white">₹ {plan.amount.toFixed(2)}</span>
           </div>
           
-          {/* Wallet Section */}
-          <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-            <div className="flex justify-between items-center mb-3">
-              <div className="flex items-center">
-                <Wallet className="h-5 w-5 text-emerald-500 mr-2" />
-                <span className="dark:text-white font-medium">NBFC Wallet</span>
-              </div>
-              <span className="text-emerald-500 font-medium">₹ {walletBalance.toFixed(2)}</span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch 
-                id="use-wallet" 
-                checked={useWallet}
-                onCheckedChange={setUseWallet}
-                disabled={walletBalance <= 0}
-              />
-              <Label htmlFor="use-wallet" className="dark:text-gray-300">
-                {walletBalance > 0 
-                  ? `Use wallet balance (saves ₹${Math.min(walletBalance, plan.amount).toFixed(2)})` 
-                  : "No wallet balance available"}
-              </Label>
-            </div>
-          </div>
+          <WalletSection
+            walletBalance={walletBalance}
+            useWallet={useWallet}
+            onUseWalletChange={setUseWallet}
+            planAmount={plan.amount}
+          />
 
-          {/* EMI Option - Only for 84-day plans */}
-          {isEMIEligible && (
-            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800/50">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center">
-                  <Calculator className="h-5 w-5 text-blue-500 mr-2" />
-                  <span className="font-medium text-blue-600 dark:text-blue-400">EMI Option Available</span>
-                </div>
-                <Switch 
-                  id="emi-option" 
-                  checked={showEMIBreakdown}
-                  onCheckedChange={setShowEMIBreakdown}
-                />
-              </div>
-              
-              {showEMIBreakdown && emiDetails && (
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-blue-600 dark:text-blue-400">Plan Amount:</span>
-                    <span>₹{emiDetails.totalAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-blue-600 dark:text-blue-400">Processing Fee (2%):</span>
-                    <span>₹{emiDetails.processingFee.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-blue-600 dark:text-blue-400">GST (18%):</span>
-                    <span>₹{emiDetails.gstOnProcessingFee.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between font-medium border-t pt-2">
-                    <span className="text-blue-600 dark:text-blue-400">Total Amount:</span>
-                    <span>₹{emiDetails.totalWithCharges.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between font-medium">
-                    <span className="text-blue-600 dark:text-blue-400">Pay Today:</span>
-                    <span>₹{emiDetails.firstPayment.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-blue-600 dark:text-blue-400">Remaining EMIs:</span>
-                    <span>2 × ₹{emiDetails.emiAmount.toFixed(2)}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          <EMISection
+            isEMIEligible={isEMIEligible}
+            showEMIBreakdown={showEMIBreakdown}
+            onEMIToggle={setShowEMIBreakdown}
+            emiDetails={emiDetails}
+            isThreeMonth={plan.isThreeMonth}
+          />
           
-          {/* Note for 28-day plans */}
-          {!isEMIEligible && plan.isThreeMonth && (
-            <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-100 dark:border-amber-800/50">
-              <div className="flex items-center text-amber-600 dark:text-amber-400">
-                <AlertCircle className="h-5 w-5 mr-2" />
-                <span className="text-sm">EMI option is only available for 84-day plans</span>
-              </div>
-            </div>
-          )}
+          <CashbackInfo
+            isThreeMonth={plan.isThreeMonth}
+            cashbackAmount={cashbackAmount}
+          />
           
-          {/* Cashback Info */}
-          {plan.isThreeMonth && cashbackAmount > 0 && (
-            <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800/50">
-              <div className="flex items-center text-emerald-600 dark:text-emerald-400">
-                <CreditCard className="h-5 w-5 mr-2" />
-                <span className="font-medium">Get ₹{cashbackAmount} cashback in your wallet!</span>
-              </div>
-              <p className="text-sm text-emerald-500 dark:text-emerald-300 mt-1">
-                Automatically credited after successful recharge
-              </p>
-            </div>
-          )}
-          
-          {/* Payment Summary */}
-          <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-            {!showEMIBreakdown ? (
-              <>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="dark:text-gray-300">Plan Amount:</span>
-                  <span className="dark:text-white">₹ {plan.amount.toFixed(2)}</span>
-                </div>
-                
-                {useWallet && walletBalance > 0 && (
-                  <div className="flex justify-between items-center mb-2 text-emerald-500">
-                    <span>Wallet Deduction:</span>
-                    <span>- ₹ {Math.min(walletBalance, plan.amount).toFixed(2)}</span>
-                  </div>
-                )}
-                
-                <div className="flex justify-between items-center pt-3 border-t border-gray-100 dark:border-gray-700 font-semibold">
-                  <span className="dark:text-white">Amount to Pay:</span>
-                  <span className="dark:text-white text-lg">₹ {finalAmount.toFixed(2)}</span>
-                </div>
-              </>
-            ) : (
-              emiDetails && (
-                <div className="flex justify-between items-center font-semibold">
-                  <span className="dark:text-white">Pay Today:</span>
-                  <span className="dark:text-white text-lg">₹ {emiDetails.firstPayment.toFixed(2)}</span>
-                </div>
-              )
-            )}
-          </div>
+          <PaymentSummary
+            planAmount={plan.amount}
+            useWallet={useWallet}
+            walletBalance={walletBalance}
+            finalAmount={finalAmount}
+            showEMIBreakdown={showEMIBreakdown}
+            emiDetails={emiDetails}
+          />
         </div>
         
         <DialogFooter className="flex-col sm:flex-row sm:justify-between gap-2">
