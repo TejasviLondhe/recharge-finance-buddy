@@ -30,6 +30,17 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Get user's phone number from profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('phone_number')
+      .eq('id', userId)
+      .single();
+
+    if (profileError || !profile?.phone_number) {
+      throw new Error('User phone number not found. Please update your profile.');
+    }
+
     // PhonePe API configuration
     const merchantId = 'PGTESTPAYUAT'; // Test merchant ID
     const saltKey = '099eb0cd-02cf-4e2a-8aca-3e6c6aff0399'; // Test salt key
@@ -82,7 +93,7 @@ serve(async (req) => {
         .insert({
           user_id: userId,
           plan_id: planId,
-          phone_number: '1234567890', // This should come from user profile
+          phone_number: profile.phone_number,
           total_amount: amount / 100,
           payment_status: 'pending',
           transaction_id: transactionId,
@@ -106,6 +117,7 @@ serve(async (req) => {
         }
       );
     } else {
+      console.error('PhonePe payment initiation failed:', result);
       throw new Error(result.message || 'Payment initiation failed');
     }
 

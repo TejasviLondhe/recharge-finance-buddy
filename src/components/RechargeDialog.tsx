@@ -39,16 +39,21 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [showEMIBreakdown, setShowEMIBreakdown] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ phone_number?: string } | null>(null);
   
   // EMI calculation constants
   const processingFeeRate = 0.02; // 2%
   const gstRate = 0.18; // 18%
   const emiCount = 3;
   
+  // Check if plan is eligible for EMI (only 84-day plans)
+  const isEMIEligible = plan?.isThreeMonth && plan?.validity === "84 days";
+  
   useEffect(() => {
     if (isOpen && user && plan) {
       fetchWalletData();
       fetchCashbackSettings();
+      fetchUserProfile();
     }
   }, [isOpen, user, plan]);
   
@@ -58,6 +63,24 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
     }
   }, [plan, useWallet, walletBalance]);
   
+  const fetchUserProfile = async () => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('phone_number')
+        .eq('id', user?.id)
+        .single();
+        
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+      
+      setUserProfile(profile);
+    } catch (error: any) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
   const fetchWalletData = async () => {
     try {
       setLoading(true);
@@ -124,7 +147,7 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
   };
 
   const calculateEMIDetails = () => {
-    if (!plan) return null;
+    if (!plan || !isEMIEligible) return null;
     
     const totalAmount = plan.amount;
     const processingFee = totalAmount * processingFeeRate;
@@ -145,14 +168,24 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
   const handlePayment = async () => {
     if (!plan || !user) return;
     
+    // Check if user has phone number
+    if (!userProfile?.phone_number) {
+      toast({
+        title: "Phone Number Required",
+        description: "Please update your profile with a phone number to proceed with payment.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       setProcessingPayment(true);
       
       const walletDeduction = useWallet ? Math.min(walletBalance, plan.amount) : 0;
       const amountToPay = finalAmount;
       
-      if (plan.isThreeMonth && showEMIBreakdown) {
-        // Handle EMI payment
+      if (isEMIEligible && showEMIBreakdown) {
+        // Handle EMI payment for 84-day plans
         const emiDetails = calculateEMIDetails();
         if (!emiDetails) return;
         
@@ -177,7 +210,7 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
         window.location.href = paymentUrl;
         
       } else {
-        // Handle regular payment
+        // Handle regular payment (28-day plans or 84-day plans without EMI)
         const { paymentUrl, transactionId } = await phonePeService.initiatePayment(
           amountToPay,
           user.id,
@@ -259,8 +292,8 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
             </div>
           </div>
 
-          {/* EMI Option for 3-Month Plans */}
-          {plan.isThreeMonth && (
+          {/* EMI Option - Only for 84-day plans */}
+          {isEMIEligible && (
             <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800/50">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center">
@@ -302,6 +335,16 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          
+          {/* Note for 28-day plans */}
+          {!isEMIEligible && plan.isThreeMonth && (
+            <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-100 dark:border-amber-800/50">
+              <div className="flex items-center text-amber-600 dark:text-amber-400">
+                <AlertCircle className="h-5 w-5 mr-2" />
+                <span className="text-sm">EMI option is only available for 84-day plans</span>
+              </div>
             </div>
           )}
           
