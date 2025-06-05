@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
@@ -420,6 +421,3 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSwitchToPhone }) => {
 };
 
 export default EmailAuth;
-
-// Add missing import
-import { ArrowLeft } from 'lucide-react';

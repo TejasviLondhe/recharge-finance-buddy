@@ -6,12 +6,14 @@ import { toast } from "@/hooks/use-toast";
 
 interface AuthContextType {
   user: User | null;
+  session: User | null; // For compatibility with existing code
   loading: boolean;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  session: null,
   loading: true,
   signOut: async () => {},
 });
@@ -42,7 +44,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session: user, // For compatibility 
+      loading, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );

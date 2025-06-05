@@ -10,14 +10,14 @@ type AuthMode = 'email' | 'phone';
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>('email');
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { user } = useAuth();
   
   // Redirect if user is already logged in
   useEffect(() => {
-    if (session) {
+    if (user) {
       navigate('/dashboard');
     }
-  }, [session, navigate]);
+  }, [user, navigate]);
   
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 px-4 py-8 flex flex-col items-center justify-center">
