@@ -46,7 +46,7 @@ const WalletPage = () => {
       const { data: walletData, error: walletError } = await supabase
         .from('wallet_balance')
         .select('balance, use_wallet_for_recharge')
-        .eq('user_id', user?.id)
+        .eq('user_id', user?.uid)
         .single();
         
       if (walletError && walletError.code !== 'PGRST116') {
@@ -62,7 +62,7 @@ const WalletPage = () => {
       const { data: transactionsData, error: transactionsError } = await supabase
         .from('wallet_transactions')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user?.uid)
         .order('created_at', { ascending: false })
         .limit(20);
         
@@ -100,7 +100,7 @@ const WalletPage = () => {
         .update({
           use_wallet_for_recharge: checked
         })
-        .eq('user_id', user?.id);
+        .eq('user_id', user?.uid);
         
       if (error) throw error;
       

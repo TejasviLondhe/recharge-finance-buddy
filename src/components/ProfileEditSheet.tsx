@@ -12,7 +12,7 @@ import { z } from "zod";
 import { User } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { updateProfile } from 'firebase/auth';
 
 const profileFormSchema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters").max(50),
@@ -33,8 +33,6 @@ export function ProfileEditSheet({ isOpen, onClose }: ProfileEditSheetProps) {
     full_name: '',
     phone_number: '',
   });
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -46,91 +44,29 @@ export function ProfileEditSheet({ isOpen, onClose }: ProfileEditSheetProps) {
 
   // Load user profile data
   useEffect(() => {
-    async function loadProfile() {
-      if (user) {
-        setLoading(true);
-        try {
-          // Get profile data
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('full_name, phone_number')
-            .eq('id', user.id)
-            .single();
-
-          if (error) throw error;
-          
-          if (data) {
-            setProfileData(data);
-            form.reset({
-              full_name: data.full_name || '',
-              phone_number: data.phone_number || '',
-            });
-          }
-
-          // Get avatar
-          const { data: avatarData } = await supabase
-            .storage
-            .from('avatars')
-            .download(`${user.id}`);
-
-          if (avatarData) {
-            const url = URL.createObjectURL(avatarData);
-            setAvatarUrl(url);
-          }
-        } catch (error: any) {
-          console.error('Error loading profile:', error.message);
-        } finally {
-          setLoading(false);
-        }
-      }
-    }
-
-    if (isOpen) {
-      loadProfile();
+    if (user && isOpen) {
+      const userData = {
+        full_name: user.displayName || '',
+        phone_number: user.phoneNumber || '',
+      };
+      
+      setProfileData(userData);
+      form.reset({
+        full_name: userData.full_name,
+        phone_number: userData.phone_number || '',
+      });
     }
   }, [user, isOpen, form]);
-
-  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const file = event.target.files[0];
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("Image size must be less than 2MB");
-        return;
-      }
-      setAvatarFile(file);
-      setAvatarUrl(URL.createObjectURL(file));
-    }
-  };
 
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) return;
     
     setLoading(true);
     try {
-      // Update profile
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: values.full_name,
-          phone_number: values.phone_number || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      // Upload avatar if changed
-      if (avatarFile) {
-        const { error: uploadError } = await supabase
-          .storage
-          .from('avatars')
-          .upload(`${user.id}`, avatarFile, {
-            upsert: true,
-            contentType: avatarFile.type,
-          });
-
-        if (uploadError) throw uploadError;
-      }
+      // Update Firebase user profile
+      await updateProfile(user, {
+        displayName: values.full_name,
+      });
 
       await refreshSession();
       toast.success('Profile updated successfully');
@@ -154,31 +90,16 @@ export function ProfileEditSheet({ isOpen, onClose }: ProfileEditSheetProps) {
           <div className="flex flex-col items-center space-y-4 mb-6">
             <div className="relative">
               <Avatar className="w-24 h-24">
-                {avatarUrl ? (
-                  <AvatarImage src={avatarUrl} alt="Profile" />
+                {user?.photoURL ? (
+                  <AvatarImage src={user.photoURL} alt="Profile" />
                 ) : (
                   <AvatarFallback className="bg-emerald-100">
                     <User className="h-12 w-12 text-emerald-500" />
                   </AvatarFallback>
                 )}
               </Avatar>
-              <label 
-                htmlFor="avatar-upload" 
-                className="absolute bottom-0 right-0 p-1 rounded-full bg-emerald-500 text-white cursor-pointer"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
-                </svg>
-              </label>
-              <input
-                id="avatar-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarChange}
-              />
             </div>
-            <p className="text-sm text-gray-500">Click the edit icon to change your profile picture</p>
+            <p className="text-sm text-gray-500">Profile picture from your authentication provider</p>
           </div>
 
           <Form {...form}>
@@ -204,9 +125,15 @@ export function ProfileEditSheet({ isOpen, onClose }: ProfileEditSheetProps) {
                   <FormItem>
                     <FormLabel>Phone Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Your phone number" {...field} value={field.value || ''} />
+                      <Input 
+                        placeholder="Your phone number" 
+                        {...field} 
+                        value={field.value || ''} 
+                        disabled 
+                      />
                     </FormControl>
                     <FormMessage />
+                    <p className="text-xs text-gray-500">Phone number is managed by your authentication provider</p>
                   </FormItem>
                 )}
               />

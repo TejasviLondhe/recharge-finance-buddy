@@ -68,7 +68,7 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('phone_number')
-        .eq('id', user?.id)
+        .eq('id', user?.uid)
         .single();
         
       if (error && error.code !== 'PGRST116') {
@@ -88,7 +88,7 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
       const { data: walletData, error: walletError } = await supabase
         .from('wallet_balance')
         .select('balance, use_wallet_for_recharge')
-        .eq('user_id', user?.id)
+        .eq('user_id', user?.uid)
         .single();
         
       if (walletError && walletError.code !== 'PGRST116') {
@@ -169,7 +169,7 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
     if (!plan || !user) return;
     
     // Check if user has phone number
-    if (!userProfile?.phone_number) {
+    if (!userProfile?.phone_number && !user.phoneNumber) {
       toast({
         title: "Phone Number Required",
         description: "Please update your profile with a phone number to proceed with payment.",
@@ -191,7 +191,7 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
         
         const { paymentUrl, transactionId } = await phonePeService.initiatePayment(
           emiDetails.firstPayment,
-          user.id,
+          user.uid,
           plan.id,
           plan.name,
           true // isRecurring
@@ -200,7 +200,7 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
         // Setup recurring payment schedule
         await phonePeService.setupRecurringPayment(
           plan.id,
-          user.id,
+          user.uid,
           emiDetails.totalWithCharges,
           emiDetails.emiAmount,
           emiCount
@@ -213,7 +213,7 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
         // Handle regular payment (28-day plans or 84-day plans without EMI)
         const { paymentUrl, transactionId } = await phonePeService.initiatePayment(
           amountToPay,
-          user.id,
+          user.uid,
           plan.id,
           plan.name,
           false
@@ -222,7 +222,7 @@ const RechargeDialog = ({ isOpen, onClose, plan }: RechargeDialogProps) => {
         // If using wallet, process wallet deduction first
         if (walletDeduction > 0) {
           const { error } = await supabase.rpc('process_recharge', {
-            p_user_id: user.id,
+            p_user_id: user.uid,
             p_plan_id: plan.id,
             p_plan_name: plan.name,
             p_plan_amount: plan.amount,

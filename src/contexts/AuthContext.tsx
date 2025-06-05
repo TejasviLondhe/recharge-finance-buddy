@@ -9,6 +9,7 @@ interface AuthContextType {
   session: User | null; // For compatibility with existing code
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   signOut: async () => {},
+  refreshSession: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -29,6 +31,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.success("Signed out successfully");
     } catch (error: any) {
       toast.error(error.message || "Error signing out");
+    }
+  };
+
+  // Refresh session function
+  const refreshSession = async () => {
+    try {
+      await firebaseAuth.currentUser?.reload();
+      setUser(firebaseAuth.currentUser);
+    } catch (error: any) {
+      console.error('Error refreshing session:', error);
     }
   };
 
@@ -48,7 +60,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user, 
       session: user, // For compatibility 
       loading, 
-      signOut 
+      signOut,
+      refreshSession
     }}>
       {children}
     </AuthContext.Provider>
