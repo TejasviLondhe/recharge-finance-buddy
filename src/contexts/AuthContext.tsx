@@ -1,81 +1,48 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { supabase } from '../integrations/supabase/client';
-import { Session, User } from '@supabase/supabase-js';
+import { User, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
+import { firebaseAuth } from '../integrations/firebase/client';
 import { toast } from "@/hooks/use-toast";
 
 interface AuthContextType {
-  session: Session | null;
   user: User | null;
   loading: boolean;
   signOut: () => Promise<void>;
-  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
-  session: null,
   user: null,
   loading: true,
   signOut: async () => {},
-  refreshSession: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Sign out function from Supabase
+  // Sign out function
   const signOut = async () => {
     try {
-      // Sign out from Supabase
-      await supabase.auth.signOut();
-      
+      await firebaseSignOut(firebaseAuth);
       toast.success("Signed out successfully");
     } catch (error: any) {
       toast.error(error.message || "Error signing out");
     }
   };
 
-  // Refresh session function
-  const refreshSession = async () => {
-    try {
-      const { data, error } = await supabase.auth.refreshSession();
-      if (error) throw error;
-      
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-    } catch (error: any) {
-      toast.error(error.message || "Error refreshing session");
-    }
-  };
-
-  // Setup auth listeners for Supabase
+  // Setup auth listeners for Firebase
   useEffect(() => {
-    // Set up Supabase auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        console.log("Supabase auth state changed:", event);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    // Check for existing Supabase session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
+      console.log("Firebase auth state changed:", currentUser);
+      setUser(currentUser);
       setLoading(false);
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signOut, refreshSession }}>
+    <AuthContext.Provider value={{ user, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

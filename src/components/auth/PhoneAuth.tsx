@@ -1,11 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { supabase } from '@/integrations/supabase/client';
+import { 
+  RecaptchaVerifier, 
+  signInWithPhoneNumber, 
+  PhoneAuthProvider,
+  signInWithCredential
+} from 'firebase/auth';
+import { firebaseAuth } from "@/integrations/firebase/client";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -21,42 +27,77 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onBackToEmail }) => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verificationId, setVerificationId] = useState<string | null>(null);
+  const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Initialize reCAPTCHA verifier
+    const initRecaptcha = () => {
+      if (!recaptchaVerifier) {
+        try {
+          const verifier = new RecaptchaVerifier(firebaseAuth, 'recaptcha-container', {
+            size: 'invisible',
+            callback: () => {
+              console.log("reCAPTCHA verified");
+            },
+            'expired-callback': () => {
+              toast.error("reCAPTCHA expired. Please try again.");
+            }
+          });
+          setRecaptchaVerifier(verifier);
+        } catch (error: any) {
+          console.error("reCAPTCHA initialization error:", error);
+          setError("Failed to initialize reCAPTCHA. Please refresh the page.");
+        }
+      }
+    };
+
+    initRecaptcha();
+
+    // Cleanup
+    return () => {
+      if (recaptchaVerifier) {
+        recaptchaVerifier.clear();
+      }
+    };
+  }, []);
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     
-    // Validate phone number
     if (!phoneNumber || phoneNumber.length < 10) {
       toast.error("Please enter a valid phone number");
       return;
     }
     
-    // Format phone number if needed
+    if (!recaptchaVerifier) {
+      setError("reCAPTCHA not initialized. Please refresh the page.");
+      return;
+    }
+    
     let formattedNumber = phoneNumber;
     if (!formattedNumber.startsWith('+')) {
-      formattedNumber = `+${formattedNumber}`; // Add + if not present
+      formattedNumber = `+${formattedNumber}`;
     }
     
     setLoading(true);
     
     try {
-      // Use Supabase's phone OTP sign-in method
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: formattedNumber,
-      });
+      const confirmationResult = await signInWithPhoneNumber(
+        firebaseAuth, 
+        formattedNumber, 
+        recaptchaVerifier
+      );
       
-      if (error) {
-        throw error;
-      }
-      
+      setVerificationId(confirmationResult.verificationId);
       toast.success("OTP sent to your phone");
       setStep('otp');
     } catch (error: any) {
-      setError(error.message || "Failed to send OTP. Make sure Twilio is properly configured.");
-      toast.error("Failed to send OTP");
       console.error("Error sending OTP:", error);
+      setError(getFirebaseErrorMessage(error.code));
+      toast.error("Failed to send OTP");
     } finally {
       setLoading(false);
     }
@@ -71,28 +112,46 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onBackToEmail }) => {
       return;
     }
     
+    if (!verificationId) {
+      setError("No verification ID found. Please request a new code.");
+      return;
+    }
+    
     setLoading(true);
     
     try {
-      // Verify OTP using Supabase
-      const { error } = await supabase.auth.verifyOtp({
-        phone: phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`,
-        token: otp,
-        type: 'sms'
-      });
-      
-      if (error) {
-        throw error;
-      }
+      const credential = PhoneAuthProvider.credential(verificationId, otp);
+      await signInWithCredential(firebaseAuth, credential);
       
       toast.success("Phone number verified successfully");
       navigate('/dashboard');
     } catch (error: any) {
-      setError(error.message || "Invalid OTP. Please try again.");
-      toast.error("Invalid OTP");
       console.error("Error verifying OTP:", error);
+      setError(getFirebaseErrorMessage(error.code));
+      toast.error("Invalid OTP");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getFirebaseErrorMessage = (errorCode: string): string => {
+    switch (errorCode) {
+      case 'auth/invalid-phone-number':
+        return 'Invalid phone number format.';
+      case 'auth/too-many-requests':
+        return 'Too many requests. Please try again later.';
+      case 'auth/invalid-verification-code':
+        return 'Invalid verification code.';
+      case 'auth/invalid-verification-id':
+        return 'Invalid verification ID.';
+      case 'auth/code-expired':
+        return 'Verification code has expired.';
+      case 'auth/missing-verification-code':
+        return 'Missing verification code.';
+      case 'auth/missing-verification-id':
+        return 'Missing verification ID.';
+      default:
+        return 'An error occurred during phone verification.';
     }
   };
 
@@ -144,6 +203,9 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onBackToEmail }) => {
           Login with Email
         </Button>
       </form>
+      
+      {/* reCAPTCHA container - invisible */}
+      <div id="recaptcha-container"></div>
     </>
   );
 
