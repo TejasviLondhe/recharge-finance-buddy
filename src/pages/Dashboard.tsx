@@ -79,7 +79,7 @@ const Dashboard = () => {
       const { data, error } = await supabase
         .from('wallet_balance')
         .select('balance')
-        .eq('user_id', user?.uid)
+        .eq('user_id', user?.id)
         .single();
         
       if (error && error.code !== 'PGRST116') {
@@ -94,7 +94,7 @@ const Dashboard = () => {
         await supabase
           .from('wallet_balance')
           .insert({
-            user_id: user?.uid,
+            user_id: user?.id,
             balance: 0,
             use_wallet_for_recharge: true
           });
@@ -168,7 +168,7 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-6 pb-20">
         {/* Welcome Section */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold dark:text-white">Welcome back, {user?.displayName || 'User'}!</h2>
+          <h2 className="text-2xl font-bold dark:text-white">Welcome back, {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}!</h2>
           <p className="text-gray-500 dark:text-gray-400">Your telecom recharge dashboard</p>
         </section>
         

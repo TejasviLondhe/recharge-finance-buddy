@@ -12,7 +12,7 @@ import { z } from "zod";
 import { User } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateProfile } from 'firebase/auth';
+import { supabase } from "@/integrations/supabase/client";
 
 const profileFormSchema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters").max(50),
@@ -46,8 +46,8 @@ export function ProfileEditSheet({ isOpen, onClose }: ProfileEditSheetProps) {
   useEffect(() => {
     if (user && isOpen) {
       const userData = {
-        full_name: user.displayName || '',
-        phone_number: user.phoneNumber || '',
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
+        phone_number: user.phone || '',
       };
       
       setProfileData(userData);
@@ -63,17 +63,28 @@ export function ProfileEditSheet({ isOpen, onClose }: ProfileEditSheetProps) {
     
     setLoading(true);
     try {
-      // Update Firebase user profile
-      await updateProfile(user, {
-        displayName: values.full_name,
+      // Update Supabase user metadata
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          full_name: values.full_name,
+        }
       });
 
+      if (error) throw error;
+
       await refreshSession();
-      toast.success('Profile updated successfully');
+      toast({
+        title: "Success",
+        description: "Profile updated successfully"
+      });
       onClose();
     } catch (error: any) {
       console.error('Error updating profile:', error.message);
-      toast.error('Failed to update profile');
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -90,13 +101,9 @@ export function ProfileEditSheet({ isOpen, onClose }: ProfileEditSheetProps) {
           <div className="flex flex-col items-center space-y-4 mb-6">
             <div className="relative">
               <Avatar className="w-24 h-24">
-                {user?.photoURL ? (
-                  <AvatarImage src={user.photoURL} alt="Profile" />
-                ) : (
-                  <AvatarFallback className="bg-emerald-100">
-                    <User className="h-12 w-12 text-emerald-500" />
-                  </AvatarFallback>
-                )}
+                <AvatarFallback className="bg-emerald-100">
+                  <User className="h-12 w-12 text-emerald-500" />
+                </AvatarFallback>
               </Avatar>
             </div>
             <p className="text-sm text-gray-500">Profile picture from your authentication provider</p>
