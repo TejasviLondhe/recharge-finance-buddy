@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import EmailAuth from '@/components/auth/EmailAuth';
-import PhoneAuth from '@/components/auth/PhoneAuth';
+import SupabasePhoneAuth from '@/components/auth/SupabasePhoneAuth';
 
 type AuthMode = 'email' | 'phone';
 
@@ -24,7 +24,7 @@ const Auth = () => {
       {mode === 'email' ? (
         <EmailAuth onSwitchToPhone={() => setMode('phone')} />
       ) : (
-        <PhoneAuth onBackToEmail={() => setMode('email')} />
+        <SupabasePhoneAuth onBackToEmail={() => setMode('email')} />
       )}
     </div>
   );
