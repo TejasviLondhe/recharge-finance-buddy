@@ -175,7 +175,7 @@ const Dashboard = () => {
         {/* Balance Card */}
         <section className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-6 text-white mb-8 shadow-lg">
           <p className="text-white/80 mb-2">Total Balance</p>
-          <h3 className="text-3xl font-bold mb-4">₹ 2,500.00</h3>
+          <h3 className="text-3xl font-bold mb-4">₹ {walletBalance.toFixed(2)}</h3>
           <div className="flex justify-between items-center">
             <div>
               <p className="text-white/80 text-sm">NBFC Wallet</p>
